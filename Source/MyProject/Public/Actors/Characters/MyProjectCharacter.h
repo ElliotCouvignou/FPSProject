@@ -78,10 +78,20 @@ public:
 	virtual bool IsInFirstPersonPerspective() const { return bIsFirstPersonPerspective; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	USkeletalMeshComponent* GetFirstPersonMesh() const { return FPSMesh; }
+	USkeletalMeshComponent* GetFirstPersonMesh() const { return (bDoNoFPSMeshMethod) ? nullptr : FPSMesh; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	USkeletalMeshComponent* GetThirdPersonMesh() const { return GetMesh(); }
+
+	/* Only call this on locally controlled cleitns */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FTransform GetRightHandLocation() const { return RightHandLocation; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	FTransform GetLeftHandLocation() const { return LeftHandLocation; }
 	
 	// Implement IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -166,7 +176,15 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Essential|FOV")
 	float Default3PFOV = 90.f;
 
-
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|FPSNoMesh")
+	bool bDoNoFPSMeshMethod;
+	/* local location when attatched to fps camera */
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|FPSNoMesh")
+	FTransform RightHandLocation;
+	/* local location when attatched to fps camera */
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|FPSNoMesh")
+	FTransform LeftHandLocation;
+	
 	FGameplayTag NoWeaponTag;
 	FGameplayTag WeaponChangingDelayReplicationTag;
 	FGameplayTag WeaponAmmoTypeNoneTag;

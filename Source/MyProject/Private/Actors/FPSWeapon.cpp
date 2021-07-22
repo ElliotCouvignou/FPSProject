@@ -4,6 +4,7 @@
 #include "Actors/FPSWeapon.h"
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Camera/CameraComponent.h"
 #include "AbilitySystem/FPSWeaponGameplayAbility.h"
 #include "AbilitySystem/MyGTGA_LineTrace.h"
 #include "Net/UnrealNetwork.h"
@@ -134,14 +135,18 @@ void AFPSWeapon::Equip()
 
 	if (WeaponMesh1P)
 	{
-		WeaponMesh1P->AttachToComponent(OwningCharacter->GetFirstPersonMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachPoint);
-		WeaponMesh1P->SetRelativeTransform(WeaponMesh1PEquippedRelativeTransform);
 
-		print(AttachPoint.ToString());
-		DrawDebugSphere(GetWorld(), OwningCharacter->GetFirstPersonMesh()->GetSocketLocation(AttachPoint), 10.f, 8, FColor::Blue, false, 6.f, 0, 2.f);
-
-		DrawDebugSphere(GetWorld(), OwningCharacter->GetFirstPersonMesh()->GetBoneLocation(FName("RightHand")), 12.f, 8, FColor::Green, false, 6.f, 0, 2.f);
-
+		if(OwningCharacter->GetFirstPersonMesh())
+		{
+			WeaponMesh1P->AttachToComponent(OwningCharacter->GetFirstPersonMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachPoint);
+			WeaponMesh1P->SetRelativeTransform(WeaponMesh1PEquippedRelativeTransform);
+		}			
+		else
+		{
+			WeaponMesh1P->AttachToComponent(OwningCharacter->GetFirstPersonCamera(), FAttachmentTransformRules::KeepWorldTransform, AttachPoint);
+			WeaponMesh1P->SetRelativeTransform(bAttatchRight ? OwningCharacter->GetRightHandLocation() : OwningCharacter->GetLeftHandLocation());
+		}
+			
 		if (OwningCharacter->IsInFirstPersonPerspective())
 		{
 			WeaponMesh1P->bOnlyOwnerSee = true;

@@ -73,10 +73,7 @@ void AODMGrapple::BeginPlay()
 		Cable->SetAttachEndToComponent(ODMComponent, FName("GrappleSocket"));
 		Cable->EndLocation = FVector(0.f, 0.f, 0.f);  // this gets set to some weird offset idk why
 		
-		//Cable->SetAttachEndTo(Character, FName(ODMComponent->GetName()), FName("GrappleSocket"));
-		
-		print(FString("Cable->EndLocation: " + Cable->EndLocation.ToString()));
-		
+		//Cable->SetAttachEndTo(Character, FName(ODMComponent->GetName()), FName("GrappleSocket"));		
 		// TArray<FVector> Locations;
 		// Cable->GetCableParticleLocations(Locations);
 		// USceneComponent* EndComponent = Cast<USceneComponent>(Cable->AttachEndTo.GetComponent(Character));

@@ -23,6 +23,7 @@ void AMyGTGA_LineTrace::Configure(
 	bool bInDebug,
 	bool bInTraceAffectsAimPitch,
 	bool bInTraceFromPlayerViewPoint,
+	bool bInTraceUsingStartOrientation,
 	bool bInUseAimingSpreadMod,
 	float InMaxRange,
 	float InBaseSpread,
@@ -45,6 +46,7 @@ void AMyGTGA_LineTrace::Configure(
 	bDebug = bInDebug;
 	bTraceAffectsAimPitch = bInTraceAffectsAimPitch;
 	bTraceFromPlayerViewPoint = bInTraceFromPlayerViewPoint;
+	bTraceUsingStartOrientation = bInTraceUsingStartOrientation;
 	bUseAimingSpreadMod = bInUseAimingSpreadMod;
 	MaxRange = InMaxRange;
 	BaseSpread = InBaseSpread;

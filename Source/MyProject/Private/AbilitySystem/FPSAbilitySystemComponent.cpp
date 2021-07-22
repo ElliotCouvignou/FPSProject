@@ -204,6 +204,16 @@ UAnimMontage* UFPSAbilitySystemComponent::GetCurrentMontageForMesh(USkeletalMesh
 	return nullptr;
 }
 
+int32 UFPSAbilitySystemComponent::K2_GetTagCount(FGameplayTag TagToCheck) const
+{
+	return GetTagCount(TagToCheck);
+}
+
+bool UFPSAbilitySystemComponent::K2_HasTag(FGameplayTag TagToCheck) const
+{
+	return GetTagCount(TagToCheck) > 0;
+}
+
 FGameplayAbilitySpecHandle UFPSAbilitySystemComponent::FindAbilitySpecHandleForClass(
 	TSubclassOf<UGameplayAbility> AbilityClass, UObject* OptionalSourceObject)
 {

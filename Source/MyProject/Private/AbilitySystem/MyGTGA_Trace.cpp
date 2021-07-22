@@ -269,6 +269,66 @@ void AMyGTGA_Trace::AimWithPlayerController(const AActor* InSourceActor, FCollis
 	OutTraceEnd = TraceStart + (ShootDir * MaxRange);
 }
 
+void AMyGTGA_Trace::AimWithSourceOrientation(const AActor* InSourceActor, FCollisionQueryParams Params,
+	const FVector& TraceStart, FVector& OutTraceEnd, bool bIgnorePitch)
+{
+
+	if (!OwningAbility) // Server and launching client only
+		{
+		return;
+		}
+
+	// Default values in case of AI Controller
+	FVector ViewStart = TraceStart;
+	FRotator ViewRot = StartLocation.GetTargetingTransform().GetRotation().Rotator();
+
+	if (MasterPC)
+	{
+		MasterPC->GetPlayerViewPoint(ViewStart, ViewRot);
+	}
+
+	// const FVector ViewDir = ViewRot.Vector();
+	// FVector ViewEnd = ViewStart + (ViewDir * MaxRange);
+	//
+	// ClipCameraRayToAbilityRange(ViewStart, ViewDir, TraceStart, MaxRange, ViewEnd);
+	//
+	// // Use first hit
+	// TArray<FHitResult> HitResults;
+	// LineTraceWithFilter(HitResults, InSourceActor->GetWorld(), Filter, ViewStart, ViewEnd, TraceProfile.Name, Params);
+	//
+	// CurrentTargetingSpread = FMath::Min(TargetingSpreadMax, CurrentTargetingSpread + TargetingSpreadIncrement);
+	//
+	// const bool bUseTraceResult = HitResults.Num() > 0 && (FVector::DistSquared(TraceStart, HitResults[0].Location) <= (MaxRange * MaxRange));
+	//
+	// const FVector AdjustedEnd = (bUseTraceResult) ? HitResults[0].Location : ViewEnd;
+	//
+	// FVector AdjustedAimDir = (AdjustedEnd - TraceStart).GetSafeNormal();
+	// if (AdjustedAimDir.IsZero())
+	// {
+	// 	AdjustedAimDir = ViewDir;
+	// }
+	//
+	// if (!bTraceAffectsAimPitch && bUseTraceResult)
+	// {
+	// 	FVector OriginalAimDir = (ViewEnd - TraceStart).GetSafeNormal();
+	//
+	// 	if (!OriginalAimDir.IsZero())
+	// 	{
+	// 		// Convert to angles and use original pitch
+	// 		const FRotator OriginalAimRot = OriginalAimDir.Rotation();
+	//
+	// 		FRotator AdjustedAimRot = AdjustedAimDir.Rotation();
+	// 		AdjustedAimRot.Pitch = OriginalAimRot.Pitch;
+	//
+	// 		AdjustedAimDir = AdjustedAimRot.Vector();
+	// 	}
+	// }
+
+	const FVector ShootDir = StartLocation.GetTargetingTransform().GetRotation().GetForwardVector();
+	
+	OutTraceEnd = TraceStart + (ShootDir * MaxRange);
+}
+
 bool AMyGTGA_Trace::ClipCameraRayToAbilityRange(FVector CameraLocation, FVector CameraDirection, FVector AbilityCenter, float AbilityRange, FVector& ClippedPosition)
 {
 	FVector CameraToCenter = AbilityCenter - CameraLocation;
@@ -364,7 +424,10 @@ TArray<FHitResult> AMyGTGA_Trace::PerformTrace(AActor* InSourceActor)
 
 	for (int32 TraceIndex = 0; TraceIndex < NumberOfTraces; TraceIndex++)
 	{
-		AimWithPlayerController(InSourceActor, Params, TraceStart, TraceEnd);		//Effective on server and launching client only
+		if(bTraceUsingStartOrientation)
+			AimWithSourceOrientation(InSourceActor, Params, TraceStart, TraceEnd);
+		else
+			AimWithPlayerController(InSourceActor, Params, TraceStart, TraceEnd);		//Effective on server and launching client only
 
 		// ------------------------------------------------------
 

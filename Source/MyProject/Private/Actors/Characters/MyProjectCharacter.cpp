@@ -564,7 +564,7 @@ void AMyProjectCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
 
-	AbilitySystemComponent->InitAbilityActorInfo(GetController(), this);
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
 	BindASCInput();
 }

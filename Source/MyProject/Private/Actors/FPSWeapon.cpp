@@ -137,6 +137,11 @@ void AFPSWeapon::Equip()
 		WeaponMesh1P->AttachToComponent(OwningCharacter->GetFirstPersonMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachPoint);
 		WeaponMesh1P->SetRelativeTransform(WeaponMesh1PEquippedRelativeTransform);
 
+		print(AttachPoint.ToString());
+		DrawDebugSphere(GetWorld(), OwningCharacter->GetFirstPersonMesh()->GetSocketLocation(AttachPoint), 10.f, 8, FColor::Blue, false, 6.f, 0, 2.f);
+
+		DrawDebugSphere(GetWorld(), OwningCharacter->GetFirstPersonMesh()->GetBoneLocation(FName("RightHand")), 12.f, 8, FColor::Green, false, 6.f, 0, 2.f);
+
 		if (OwningCharacter->IsInFirstPersonPerspective())
 		{
 			WeaponMesh1P->bOnlyOwnerSee = true;

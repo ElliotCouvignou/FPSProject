@@ -98,6 +98,11 @@ public:
 	// Returns the montage that is playing for the mesh
 	UAnimMontage* GetCurrentMontageForMesh(USkeletalMeshComponent* InMesh);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Abilities", Meta = (DisplayName = "GetTagCount", ScriptName = "GetTagCount"))
+	int32 K2_GetTagCount(FGameplayTag TagToCheck) const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Abilities", Meta = (DisplayName = "HasTag", ScriptName = "HasTag"))
+	bool K2_HasTag(FGameplayTag TagToCheck) const;
 	
 	/* BP exposed c++ functioality */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Abilities")

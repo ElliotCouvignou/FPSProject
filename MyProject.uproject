@@ -63,6 +63,10 @@
 				"Mac",
 				"Win64"
 			]
+		},
+		{
+			"Name": "FullBodyIK",
+			"Enabled": true
 		}
 	]
 }

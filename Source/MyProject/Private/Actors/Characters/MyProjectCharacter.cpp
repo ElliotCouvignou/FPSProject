@@ -544,7 +544,7 @@ void AMyProjectCharacter::AddStartupEffects()
 void AMyProjectCharacter::OnRep_Inventory()
 {
 	if (GetLocalRole() == ROLE_AutonomousProxy && Inventory.Weapons.Num() > 0 && !CurrentWeapon)
-	{
+	{ 
 		// Since we don't replicate the CurrentWeapon to the owning client, this is a way to ask the Server to sync
 		// the CurrentWeapon after it's been spawned via replication from the Server.
 		// The weapon spawning is replicated but the variable CurrentWeapon is not on the owning client.

@@ -20,6 +20,7 @@ AFPSWeapon::AFPSWeapon()
 	PrimaryActorTick.bCanEverTick = false;
 
 	bReplicates = true;
+	bAlwaysRelevant = true;
 	bNetUseOwnerRelevancy = true;
 	NetUpdateFrequency = 100.0f; // Set this to a value that's appropriate for your game
 	bSpawnWithCollision = true;
@@ -80,20 +81,25 @@ UAbilitySystemComponent* AFPSWeapon::GetAbilitySystemComponent() const
 void AFPSWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
-	DOREPLIFETIME_CONDITION(AFPSWeapon, OwningCharacter, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AFPSWeapon, PrimaryClipAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AFPSWeapon, MaxPrimaryClipAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AFPSWeapon, SecondaryClipAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AFPSWeapon, MaxSecondaryClipAmmo, COND_OwnerOnly);
+
+	DOREPLIFETIME(AFPSWeapon, OwningCharacter);
+	DOREPLIFETIME(AFPSWeapon, PrimaryClipAmmo);
+	DOREPLIFETIME(AFPSWeapon, MaxPrimaryClipAmmo);
+	DOREPLIFETIME(AFPSWeapon, SecondaryClipAmmo);
+	// DOREPLIFETIME(AFPSWeapon, MaxSecondaryClipAmmo);
+	// DOREPLIFETIME_CONDITION(AFPSWeapon, OwningCharacter, COND_OwnerOnly);
+	// DOREPLIFETIME_CONDITION(AFPSWeapon, PrimaryClipAmmo, COND_OwnerOnly);
+	// DOREPLIFETIME_CONDITION(AFPSWeapon, MaxPrimaryClipAmmo, COND_OwnerOnly);
+	// DOREPLIFETIME_CONDITION(AFPSWeapon, SecondaryClipAmmo, COND_OwnerOnly);
+	// DOREPLIFETIME_CONDITION(AFPSWeapon, MaxSecondaryClipAmmo, COND_OwnerOnly);
 }
 
 void AFPSWeapon::PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker)
 {
 	Super::PreReplication(ChangedPropertyTracker);
 	
-	DOREPLIFETIME_ACTIVE_OVERRIDE(AFPSWeapon, PrimaryClipAmmo, (IsValid(AbilitySystemComponent) && !AbilitySystemComponent->HasMatchingGameplayTag(WeaponIsFiringTag)));
-	DOREPLIFETIME_ACTIVE_OVERRIDE(AFPSWeapon, SecondaryClipAmmo, (IsValid(AbilitySystemComponent) && !AbilitySystemComponent->HasMatchingGameplayTag(WeaponIsFiringTag)));
+	//DOREPLIFETIME_ACTIVE_OVERRIDE(AFPSWeapon, PrimaryClipAmmo, (IsValid(AbilitySystemComponent)/* && !AbilitySystemComponent->HasMatchingGameplayTag(WeaponIsFiringTag)*/));
+	//DOREPLIFETIME_ACTIVE_OVERRIDE(AFPSWeapon, SecondaryClipAmmo, (IsValid(AbilitySystemComponent) /*&& !AbilitySystemComponent->HasMatchingGameplayTag(WeaponIsFiringTag)*/));
 }
 
 void AFPSWeapon::SetOwningCharacter(AMyProjectCharacter* Character)
@@ -103,7 +109,7 @@ void AFPSWeapon::SetOwningCharacter(AMyProjectCharacter* Character)
 	{
 		// Called when added to inventory
 		AbilitySystemComponent = Cast<UFPSAbilitySystemComponent>(OwningCharacter->GetAbilitySystemComponent());
-		SetOwner(Character);
+		this->SetOwner(OwningCharacter);
 		AttachToComponent(OwningCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -120,6 +126,7 @@ void AFPSWeapon::SetOwningCharacter(AMyProjectCharacter* Character)
 		SetOwner(nullptr);
 		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	}
+	
 }
 
 void AFPSWeapon::Equip()
@@ -269,21 +276,25 @@ int32 AFPSWeapon::GetMaxSecondaryClipAmmo() const
 
 void AFPSWeapon::SetPrimaryClipAmmo(int32 NewPrimaryClipAmmo)
 {
-	PrimaryClipAmmo = NewPrimaryClipAmmo;	
+	OnPrimaryClipAmmoChanged.Broadcast(PrimaryClipAmmo, NewPrimaryClipAmmo);
+	PrimaryClipAmmo = NewPrimaryClipAmmo;
 }
 
 void AFPSWeapon::SetMaxPrimaryClipAmmo(int32 NewMaxPrimaryClipAmmo)
 {
+	OnMaxPrimaryClipAmmoChanged.Broadcast(PrimaryClipAmmo, MaxPrimaryClipAmmo);
 	MaxPrimaryClipAmmo = NewMaxPrimaryClipAmmo;
 }
 
 void AFPSWeapon::SetSecondaryClipAmmo(int32 NewSecondaryClipAmmo)
 {
+	OnSecondaryClipAmmoChanged.Broadcast(SecondaryClipAmmo, NewSecondaryClipAmmo);
 	SecondaryClipAmmo = NewSecondaryClipAmmo;
 }
 
 void AFPSWeapon::SetMaxSecondaryClipAmmo(int32 NewMaxSecondaryClipAmmo)
 {
+	OnMaxSecondaryClipAmmoChanged.Broadcast(SecondaryClipAmmo, MaxSecondaryClipAmmo);
 	MaxSecondaryClipAmmo = NewMaxSecondaryClipAmmo;
 }
 

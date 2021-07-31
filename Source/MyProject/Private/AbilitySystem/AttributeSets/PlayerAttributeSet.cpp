@@ -152,7 +152,8 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 	
 				if (!TargetCharacter->IsAlive())
 				{
-					print(FString("Dead lollll"));
+					//print(FString("Dead lollll"));
+					
 					// TargetCharacter was alive before this damage and now is not alive, give XP and Gold bounties to Source.
 					// Don't give bounty to self.
 					// if (SourceController != TargetController)

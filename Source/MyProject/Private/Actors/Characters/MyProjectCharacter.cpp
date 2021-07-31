@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Actors/Characters/MyProjectCharacter.h"
+
+#include "FPSPlayerState.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -17,6 +19,8 @@
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSets/PlayerAttributeSet.h"
 #include "AbilitySystem/AttributeSets/WeaponAttributeSet.h"
+#include "MyProjectGameMode.h"
+#include "MyPlayerController.h"
 #include "MyProject.h"
 
 
@@ -25,7 +29,7 @@
 //////////////////////////////////////////////////////////////////////////
 // AMyProjectCharacter
 
-AMyProjectCharacter::AMyProjectCharacter()
+AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -37,6 +41,9 @@ AMyProjectCharacter::AMyProjectCharacter()
 	WeaponAbilityTag = FGameplayTag::RequestGameplayTag(FName("Ability.Weapon"));
 	CurrentWeaponTag = NoWeaponTag;
 	Inventory = FFPSPlayerInventory();
+
+	DeadTag = FGameplayTag::RequestGameplayTag("State.Dead");
+	DeathTimerDel.BindUFunction(this, FName("FinishDying"));
 	
 	// Networking characteristics for characters
 	bAlwaysRelevant = true;
@@ -122,7 +129,9 @@ void AMyProjectCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(AMyProjectCharacter, Inventory);
 	// Only replicate CurrentWeapon to simulated clients and manually sync CurrentWeeapon with Owner when we're ready.
 	// This allows us to predict weapon changing.
-	DOREPLIFETIME_CONDITION(AMyProjectCharacter, CurrentWeapon, COND_SimulatedOnly);
+	DOREPLIFETIME(AMyProjectCharacter, CurrentWeapon);
+	
+	//DOREPLIFETIME_CONDITION(AMyProjectCharacter, CurrentWeapon, COND_SimulatedOnly);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -293,7 +302,7 @@ bool AMyProjectCharacter::AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEqui
 	{
 		return false;
 	}
-
+	
 	Inventory.Weapons.Add(NewWeapon);
 	NewWeapon->SetOwningCharacter(this);
 	NewWeapon->AddAbilities();
@@ -314,6 +323,74 @@ bool AMyProjectCharacter::IsAlive()
 		return PlayerAttributeSet->GetHealth() > 0.f;
 	}
 	return true;
+}
+
+void AMyProjectCharacter::Die()
+{
+	DisableInput(GetController<APlayerController>());
+
+	OnCharacterDied.Broadcast(this);
+
+	if (IsValid(AbilitySystemComponent))
+	{
+		AbilitySystemComponent->CancelAllAbilities();
+		AbilitySystemComponent->BlockAbilitiesWithTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Ability")));
+
+		// FGameplayTagContainer EffectTagsToRemove;
+		// EffectTagsToRemove.AddTag(EffectRemoveOnDeathTag);
+		// int32 NumEffectsRemoved = AbilitySystemComponent->RemoveActiveEffectsWithTags(EffectTagsToRemove);
+
+		AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+	}
+
+	//TODO replace with a locally executed GameplayCue
+	// if (DeathSound)
+	// {
+	// 	UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation());
+	// }
+
+	// Ragdoll
+	//Multicast_OnDeath();
+	BP_DoRagdollEffect(true);
+
+	GetWorldTimerManager().SetTimer(DeathTimerHandle, DeathTimerDel, RespawnDelay, false);
+}
+
+void AMyProjectCharacter::FinishDying()
+{
+	// Respawn at new locaiton
+	EnableInput(GetController<APlayerController>());
+	//Multicast_OnRespawn();
+	BP_DoRagdollEffect(false);
+	if (IsValid(AbilitySystemComponent))
+	{
+		AbilitySystemComponent->UnBlockAbilitiesWithTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Ability")));
+
+		// FGameplayTagContainer EffectTagsToRemove;
+		// EffectTagsToRemove.AddTag(EffectRemoveOnDeathTag);
+		// int32 NumEffectsRemoved = AbilitySystemComponent->RemoveActiveEffectsWithTags(EffectTagsToRemove);
+
+		AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+
+		PlayerAttributeSet->SetHealth(PlayerAttributeSet->GetMaxHealth());
+	}
+
+	// TODO: maybe handle spawning locaiton or all this logic elsewhere in gamemode
+	AMyProjectGameMode* GM = GetWorld()->GetAuthGameMode<AMyProjectGameMode>();
+	if(GM)
+	{
+		GM->MovePlayerToSpawnLocation(this);
+	}
+}
+
+void AMyProjectCharacter::Multicast_OnDeath_Implementation()
+{
+	BP_DoRagdollEffect(true);
+}
+
+void AMyProjectCharacter::Multicast_OnRespawn_Implementation()
+{
+	BP_DoRagdollEffect(false);
 }
 
 int32 AMyProjectCharacter::GetPrimaryClipAmmo() const
@@ -567,6 +644,8 @@ void AMyProjectCharacter::OnRep_Controller()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
 	BindASCInput();
+
+	
 }
 
 
@@ -580,17 +659,30 @@ void AMyProjectCharacter::PossessedBy(AController* NewController)
 	
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
+	AFPSPlayerState* PS = GetPlayerState<AFPSPlayerState>();
+	if(PS)
+	{
+		BindASCInput();
+
+		PS->BindDelegates();
+		
+		InitializeAttributes();
+
+		AddStartupEffects();
+
+		if (EssentialAbilities) {
+			EssentialAbilities->GiveAbilities(GetAbilitySystemComponent());
+		}
+
+		AMyPlayerController* PC = Cast<AMyPlayerController>(NewController);
+		if(PC && PC->IsLocalController())
+		{
+			PC->CreateMainGameplayWidget();
+		}
+	}
+
 	
 
-	BindASCInput();
-
-	InitializeAttributes();
-
-	AddStartupEffects();
-
-	if (EssentialAbilities) {
-		EssentialAbilities->GiveAbilities(GetAbilitySystemComponent());
-	}
 
 }
 
@@ -605,6 +697,17 @@ void AMyProjectCharacter::OnRep_PlayerState()
 	
 	BindASCInput();
 
+	AFPSPlayerState* PS = GetPlayerState<AFPSPlayerState>();
+	if(PS)
+	{
+		PS->BindDelegates();
+	}
+
+	AMyPlayerController* PC = GetController<AMyPlayerController>();
+	if(PC && PC->IsLocalController())
+	{
+		PC->CreateMainGameplayWidget();
+	}
 }
 
 // TODO: use below when having playerstate use ASC veriosn

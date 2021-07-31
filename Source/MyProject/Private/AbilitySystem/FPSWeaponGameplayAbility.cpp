@@ -58,19 +58,6 @@ UFPSWeaponGameplayAbility::UFPSWeaponGameplayAbility()
 	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag("State.Dead"));
 }
 
-void UFPSWeaponGameplayAbility::Debugprint(const FGameplayEffectSpecHandle SpecHandle)
-{
-	if(SpecHandle.Data.IsValid() && SpecHandle.Data->GetContext().GetInstigatorAbilitySystemComponent())
-	{
-		print(FString("Valid things" + GetActorInfo().OwnerActor.Get()->GetName()));
-		
-	}
-	else
-	{
-		print(FString("Invalid things" + GetActorInfo().OwnerActor.Get()->GetName()));
-		
-	}
-}
 
 
 

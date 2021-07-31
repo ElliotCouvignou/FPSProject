@@ -10,6 +10,7 @@
 
 
 
+
 class UFPSAbilitySystemComponent;
 class AFPSWeapon;
 
@@ -31,6 +32,9 @@ struct MYPROJECT_API FFPSPlayerInventory
 
 	// Etc
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AMyProjectCharacter*, Character);
+
 
 UCLASS(config=Game)
 class AMyProjectCharacter : public ACharacter, public IAbilitySystemInterface
@@ -66,7 +70,7 @@ class AMyProjectCharacter : public ACharacter, public IAbilitySystemInterface
 	
 
 public:
-	AMyProjectCharacter();
+	AMyProjectCharacter(const class FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FGameplayTag CurrentWeaponTag;
@@ -92,12 +96,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FTransform GetLeftHandLocation() const { return LeftHandLocation; }
+
+	/* returns fps ODM when in FPS and TPS in TPS, only relevant when called on localplayercontrolled client */
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	USkeletalMeshComponent* GetLocalODMComponent();
 	
 	// Implement IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintPure, Category = Ability, meta = (DefaultToSelf = Target))
 		class UPlayerAttributeSet* GetPlayerAttributeSet() const { return PlayerAttributeSet; }
+
+	UFUNCTION(BlueprintPure, Category = Ability, meta = (DefaultToSelf = Target))
+	class UWeaponAttributeSet* GetWeaponAmmoAttributeSet() const { return WeaponAmmoAttributeSet; }
 
 	UFUNCTION(BlueprintCallable, Category = "GASShooter|GSCharacter|Attributes")
 	int32 GetCharacterLevel() const;
@@ -135,10 +146,29 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEquipWeapon = false);
 
-
-	UFUNCTION(BlueprintCallable)
+	UPROPERTY(BlueprintAssignable)
+	FCharacterDiedDelegate OnCharacterDied;
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive();
 
+	virtual void Die();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void FinishDying();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, WithValidation, Reliable)
+	void Multicast_OnDeath();
+	void Multicast_OnDeath_Implementation();
+	bool Multicast_OnDeath_Validate() { return true; }
+
+	UFUNCTION(BlueprintCallable, NetMulticast, WithValidation, Reliable)
+	void Multicast_OnRespawn();
+	void Multicast_OnRespawn_Implementation();
+	bool Multicast_OnRespawn_Validate() { return true; }
+	
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void BP_DoRagdollEffect(bool DoRagdoll);
 	
 	
 	UFUNCTION(BlueprintCallable)
@@ -149,11 +179,18 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetPrimaryReserveAmmo() const;
+
 protected:
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	float RespawnDelay = 3.f;
+	
+	FGameplayTag DeadTag;
+	FTimerDelegate DeathTimerDel;
+	FTimerHandle DeathTimerHandle;
 
 	/* attribute set to be dynamically set on equipped gun's attribute set */
 	UPROPERTY()
-	class UAttributeSet* WeaponAmmoAttributeSet;
+	class UWeaponAttributeSet* WeaponAmmoAttributeSet;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Essential|Abilities")
 	class UMyAbilitySetDataAsset* EssentialAbilities;

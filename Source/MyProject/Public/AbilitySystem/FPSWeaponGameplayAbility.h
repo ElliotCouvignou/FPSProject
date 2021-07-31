@@ -129,11 +129,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffects")
 	TMap<FGameplayTag, FFPSGameplayEffectContainer> EffectContainerMap;
 
-	// TODO: delete this
-	UFUNCTION(BlueprintCallable)
-	void Debugprint(const FGameplayEffectSpecHandle SpecHandle);
-	
-
 	UFUNCTION(BlueprintCallable, Category = "Ability")
 	FGameplayAbilityTargetDataHandle MakeGameplayAbilityTargetDataHandleFromHitResults(const TArray<FHitResult> HitResults);
 

@@ -38,4 +38,20 @@ public:
 	class UPlayerAttributeSet* GetAttributeSetBase() const;
 
 	class UWeaponAttributeSet* GetAmmoAttributeSet() const;
+
+	UFUNCTION(BlueprintCallable)
+	void BindDelegates();
+
+
+protected:
+	FGameplayTag DeadTag;
+
+	// Attribute changed delegate handles
+	FDelegateHandle HealthChangedDelegateHandle;
+
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	// Attribute changed callbacks
+	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 };

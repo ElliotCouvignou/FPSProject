@@ -35,11 +35,13 @@ public:
 	// Set to false when spawning directly into a player's inventory or true when spawning into the world in pickup mode.
 	UPROPERTY(BlueprintReadWrite)
 	bool bSpawnWithCollision;
-	
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
 	bool bAttatchRight = true;
-	
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "FPSWeapon|Details")
+	FString WeaponName = "NoWeaponName";
+
 	// This tag is primarily used by the first person Animation Blueprint to determine which animations to play
 	// (Rifle vs Rocket Launcher)
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")

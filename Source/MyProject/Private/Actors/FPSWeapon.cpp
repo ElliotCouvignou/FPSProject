@@ -82,16 +82,16 @@ void AFPSWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AFPSWeapon, OwningCharacter);
-	DOREPLIFETIME(AFPSWeapon, PrimaryClipAmmo);
-	DOREPLIFETIME(AFPSWeapon, MaxPrimaryClipAmmo);
-	DOREPLIFETIME(AFPSWeapon, SecondaryClipAmmo);
+	//DOREPLIFETIME(AFPSWeapon, OwningCharacter);
+	//DOREPLIFETIME(AFPSWeapon, PrimaryClipAmmo);
+	//DOREPLIFETIME(AFPSWeapon, MaxPrimaryClipAmmo);
+	//DOREPLIFETIME(AFPSWeapon, SecondaryClipAmmo);
 	// DOREPLIFETIME(AFPSWeapon, MaxSecondaryClipAmmo);
-	// DOREPLIFETIME_CONDITION(AFPSWeapon, OwningCharacter, COND_OwnerOnly);
-	// DOREPLIFETIME_CONDITION(AFPSWeapon, PrimaryClipAmmo, COND_OwnerOnly);
-	// DOREPLIFETIME_CONDITION(AFPSWeapon, MaxPrimaryClipAmmo, COND_OwnerOnly);
-	// DOREPLIFETIME_CONDITION(AFPSWeapon, SecondaryClipAmmo, COND_OwnerOnly);
-	// DOREPLIFETIME_CONDITION(AFPSWeapon, MaxSecondaryClipAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AFPSWeapon, OwningCharacter, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AFPSWeapon, PrimaryClipAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AFPSWeapon, MaxPrimaryClipAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AFPSWeapon, SecondaryClipAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AFPSWeapon, MaxSecondaryClipAmmo, COND_OwnerOnly);
 }
 
 void AFPSWeapon::PreReplication(IRepChangedPropertyTracker& ChangedPropertyTracker)

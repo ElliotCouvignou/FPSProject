@@ -28,12 +28,15 @@ public:
 	// Sets default values for this actor's properties
 	AODMGrapple();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+	bool DisableGrapplePull = false; 
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = true))
 	USceneComponent* ODMComponent;
 	
 protected:
-\
+
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	float CableSegmentsDelay = 0.2f; // Pullstrength += SPringFactor/(offsetdist)
 	

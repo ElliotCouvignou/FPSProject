@@ -120,7 +120,7 @@ void AODMGrapple::Tick(float DeltaTime)
 		Cable->CableLength = Dist.Size();
 	}
 		
-	if(DoGrapplePull && HasAuthority())
+	if(DoGrapplePull && HasAuthority() && !DisableGrapplePull)
 	{
 		float PlayerPullInfluence = 0.f;
 		float PlayerSpringInfluence = 0.f;

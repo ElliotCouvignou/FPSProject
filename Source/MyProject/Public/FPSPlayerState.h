@@ -32,6 +32,21 @@ public:
 
 	AFPSPlayerState();
 
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_Assists)
+	int TeamIndex;
+
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_Points)
+	float Points;
+
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_Kills)
+	int Kills;
+
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_Deaths)
+	int Deaths;
+
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_Assists)
+	int Assists;
+
 	// Implement IAbilitySystemInterface
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -43,12 +58,26 @@ public:
 	void BindDelegates();
 
 
+	
+
+
 protected:
 	FGameplayTag DeadTag;
 
 	// Attribute changed delegate handles
 	FDelegateHandle HealthChangedDelegateHandle;
 
+	UFUNCTION()
+	void OnRep_TeamIndex();
+	UFUNCTION()
+	void OnRep_Points();
+	UFUNCTION()
+	void OnRep_Kills();
+	UFUNCTION()
+	void OnRep_Deaths();
+	UFUNCTION()
+	void OnRep_Assists();
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

@@ -73,6 +73,9 @@ public:
 	AMyProjectCharacter(const class FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FString PlayerName = "NoName";
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FGameplayTag CurrentWeaponTag;
 
 	UFUNCTION(BlueprintCallable)
@@ -179,6 +182,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetPrimaryReserveAmmo() const;
+
+
+	/** Called when the actor falls out of the world 'safely' (below KillZ and such) */
+	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))

@@ -2,12 +2,15 @@
 
 
 #include "FPSPlayerState.h"
+
+#include "GameplayEffectExtension.h"
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSets/PlayerAttributeSet.h"
 #include "AbilitySystem/AttributeSets/WeaponAttributeSet.h"
 #include "Actors/Characters/MyProjectCharacter.h"
 #include "MyPlayerController.h"
 #include "UI/MainGameplayWidget.h"
+#include "Net/UnrealNetwork.h"
 
 #define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
 
@@ -34,6 +37,17 @@ AFPSPlayerState::AFPSPlayerState()
 	// Default is very low for PlayerStates and introduces perceived lag in the ability system.
 	// 100 is probably way too high for a shipping game, you can adjust to fit your needs.
 	NetUpdateFrequency = 100.0f;
+}
+
+void AFPSPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSPlayerState, TeamIndex);
+	DOREPLIFETIME(AFPSPlayerState, Points);
+	DOREPLIFETIME(AFPSPlayerState, Kills);
+	DOREPLIFETIME(AFPSPlayerState, Deaths);
+	DOREPLIFETIME(AFPSPlayerState, Assists);
 }
 
 UAbilitySystemComponent* AFPSPlayerState::GetAbilitySystemComponent() const
@@ -69,6 +83,26 @@ void AFPSPlayerState::BindDelegates()
 	}
 }
 
+void AFPSPlayerState::OnRep_TeamIndex()
+{
+}
+
+void AFPSPlayerState::OnRep_Points()
+{
+}
+
+void AFPSPlayerState::OnRep_Kills()
+{
+}
+
+void AFPSPlayerState::OnRep_Deaths()
+{
+}
+
+void AFPSPlayerState::OnRep_Assists()
+{
+}
+
 void AFPSPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
@@ -84,7 +118,6 @@ void AFPSPlayerState::HealthChanged(const FOnAttributeChangeData& Data)
 	if(Player && !Player->IsAlive() && !AbilitySystemComponent->HasMatchingGameplayTag(DeadTag))\
 	{
 		Player->Die();
-		
 	}
 
 	AMyPlayerController* PC = Player->GetController<AMyPlayerController>();

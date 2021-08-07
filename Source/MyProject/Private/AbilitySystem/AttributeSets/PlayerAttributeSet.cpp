@@ -6,6 +6,10 @@
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
+#include "MyPlayerController.h"
+#include "Actors/FPSWeapon.h"
+#include "MyProjectGameMode.h"
+#include "FPSPlayerState.h"
 //#include "Player/GSPlayerController.h"
 
 
@@ -60,6 +64,7 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 	AActor* SourceActor = nullptr;
 	AController* SourceController = nullptr;
 	AMyProjectCharacter* SourceCharacter = nullptr;
+	AFPSWeapon* FpsWeapon = nullptr;
 	if (Source && Source->AbilityActorInfo.IsValid() && Source->AbilityActorInfo->AvatarActor.IsValid())
 	{
 		SourceActor = Source->AbilityActorInfo->AvatarActor.Get();
@@ -72,6 +77,10 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 			}
 		}
 
+		if(Context.GetSourceObject())
+		{
+			FpsWeapon = Cast<AFPSWeapon>(Context.GetSourceObject());
+		}
 		// Use the controller to find the source pawn
 		if (SourceController)
 		{
@@ -150,8 +159,52 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 				// 	}
 				// }
 	
-				if (!TargetCharacter->IsAlive())
+				AMyPlayerController* SourcePC = Cast<AMyPlayerController>(SourceController);
+				if (!TargetCharacter->IsAlive() && SourcePC)
 				{
+					// TODO: figure out how to fill dmg and headshot infos
+					FKillInfoStruct KillInfoStruct;
+					KillInfoStruct.PlayerName = TargetCharacter->PlayerName;
+					SourcePC->OnPlayerKilled(KillInfoStruct);
+					
+					AMyPlayerController* TargetPC = Cast<AMyPlayerController>(TargetController);
+					if(TargetPC && FpsWeapon)
+					{
+						FDiedInfoStruct InfoStruct;
+						InfoStruct.PlayerName = SourceCharacter->PlayerName;
+						InfoStruct.HealthRemaining = Source->GetNumericAttribute(GetHealthAttribute());
+						InfoStruct.WeaponName =  FpsWeapon->WeaponName;
+						TargetPC->OnPlayerDied(InfoStruct);
+					}
+
+					AMyProjectGameMode* GM = GetWorld()->GetAuthGameMode<AMyProjectGameMode>();
+					if(GM)
+					{
+						FPlayerDeathInfoStruct Info;
+						Info.bHeadShot = Context.GetHitResult()->BoneName.IsEqual("head");
+						Info.SourceWeapon = FpsWeapon;
+						Info.VictimName = TargetCharacter->PlayerName;
+						Info.KillerName = SourceCharacter->PlayerName;	
+						GM->OnPlayerDied(Info);
+					}
+
+					// Todo: streamline this method to add KDA
+					// TODO: assists
+					AFPSPlayerState* SourcePS = SourceCharacter->GetPlayerState<AFPSPlayerState>();
+					if(SourcePS)
+					{
+						
+						SourcePS->Points += 100.f;
+						SourcePS->Kills ++;
+					}
+
+					AFPSPlayerState* TargetPS = TargetCharacter->GetPlayerState<AFPSPlayerState>();
+					if(TargetPS)
+					{
+						
+						TargetPS->Deaths++;
+					}
+					
 					//print(FString("Dead lollll"));
 					
 					// TargetCharacter was alive before this damage and now is not alive, give XP and Gold bounties to Source.
@@ -177,6 +230,17 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 					//
 					// 	Source->ApplyGameplayEffectToSelf(GEBounty, 1.0f, Source->MakeEffectContext());
 					// }
+				}
+
+				if(SourcePC)
+				{
+					FDamageInfoStruct DamageInfoStruct;
+
+					// TODO: replace this with getter for head name
+					DamageInfoStruct.bHeadShot = Context.GetHitResult()->BoneName.IsEqual("head");
+					DamageInfoStruct.bPlayerDied = !TargetCharacter->IsAlive();
+					DamageInfoStruct.DamageDone = LocalDamageDone;
+					SourcePC->OnPlayerDamageDone(DamageInfoStruct);
 				}
 			}
 		}

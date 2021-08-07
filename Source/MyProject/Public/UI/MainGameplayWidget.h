@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "UI/UIInfoTypes.h"
 #include "MainGameplayWidget.generated.h"
 
 /**
@@ -17,6 +18,20 @@ class MYPROJECT_API UMainGameplayWidget : public UUserWidget
 
 public:
 
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnPlayerKilled(const FKillInfoStruct& InfoStruct);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnPlayerDied(const FDiedInfoStruct& InfoStruct);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnSomeoneDied(const FPlayerDeathInfoStruct& InfoStruct);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnMatchEnded();
+
+	
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void OnHealthChanged(float NewValue);
 

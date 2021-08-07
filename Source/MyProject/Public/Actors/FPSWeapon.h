@@ -58,6 +58,10 @@ public:
 	float TimeBetweenAttacks = 0.1f;
 	
 	// UI HUD Primary Icon when equipped. Using Sprites because of the texture atlas from ShooterGame.
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|UI")
+	UTexture2D* WeaponKillFeedIcon;
+	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|UI")
 	UTexture2D* PrimaryIcon;
 

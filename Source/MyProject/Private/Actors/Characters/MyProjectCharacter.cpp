@@ -3,7 +3,6 @@
 #include "Actors/Characters/MyProjectCharacter.h"
 
 #include "FPSPlayerState.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -362,6 +361,9 @@ void AMyProjectCharacter::FinishDying()
 	EnableInput(GetController<APlayerController>());
 	//Multicast_OnRespawn();
 	BP_DoRagdollEffect(false);
+
+	GetCharacterMovement()->Velocity = FVector(0.f, 0.f, 0.f);
+	
 	if (IsValid(AbilitySystemComponent))
 	{
 		AbilitySystemComponent->UnBlockAbilitiesWithTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Ability")));
@@ -379,7 +381,7 @@ void AMyProjectCharacter::FinishDying()
 	AMyProjectGameMode* GM = GetWorld()->GetAuthGameMode<AMyProjectGameMode>();
 	if(GM)
 	{
-		GM->MovePlayerToSpawnLocation(this);
+		GM->MovePlayerToSafeSpawnLocation(this);
 	}
 }
 
@@ -425,6 +427,25 @@ int32 AMyProjectCharacter::GetPrimaryReserveAmmo() const
 	}
 
 	return 0;
+}
+
+void AMyProjectCharacter::FellOutOfWorld(const UDamageType& dmgType)
+{
+	//if(!HasAuthority() || !AbilitySystemComponent || !PlayerAttributeSet)
+	//	Super::FellOutOfWorld(dmgType);
+
+	if(IsAlive() && HasAuthority() || GetLocalRole() == ROLE_None)
+	{
+		PlayerAttributeSet->SetHealth(0.f);
+	
+		AMyPlayerController* PC = GetController<AMyPlayerController>();
+		FDiedInfoStruct InfoStruct;
+		InfoStruct.PlayerName = "Fell Out of World";
+		InfoStruct.HealthRemaining = -1.f;
+		InfoStruct.WeaponName =  "Omnipotent Powers";
+		if(PC)
+			PC->OnPlayerDied(InfoStruct);
+	}
 }
 
 void AMyProjectCharacter::MoveForward(float Value)
@@ -670,6 +691,8 @@ void AMyProjectCharacter::PossessedBy(AController* NewController)
 
 		AddStartupEffects();
 
+		PlayerName = PS->GetPlayerName();
+
 		if (EssentialAbilities) {
 			EssentialAbilities->GiveAbilities(GetAbilitySystemComponent());
 		}
@@ -701,6 +724,8 @@ void AMyProjectCharacter::OnRep_PlayerState()
 	if(PS)
 	{
 		PS->BindDelegates();
+
+		PlayerName = PS->GetPlayerName();
 	}
 
 	AMyPlayerController* PC = GetController<AMyPlayerController>();

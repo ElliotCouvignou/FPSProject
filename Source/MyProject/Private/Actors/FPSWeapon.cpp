@@ -182,10 +182,28 @@ void AFPSWeapon::Equip()
 			WeaponMesh3P->SetVisibility(true, true);
 		}
 	}
+
+	AddAbilities();
 }
 
 void AFPSWeapon::UnEquip()
 {
+	if (OwningCharacter == nullptr)
+	{
+		return;
+	}
+
+	// Necessary to detach so that when toggling perspective all meshes attached won't become visible.
+	RemoveAbilities();
+	
+	WeaponMesh1P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	WeaponMesh1P->SetVisibility(false, true);
+
+	WeaponMesh3P->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	WeaponMesh3P->CastShadow = false;
+	WeaponMesh3P->bCastHiddenShadow = false;
+	WeaponMesh3P->SetVisibility(true, true); // Without this, the unequipped weapon's 3p shadow hangs around
+	WeaponMesh3P->SetVisibility(false, true);
 }
 
 void AFPSWeapon::AddAbilities()

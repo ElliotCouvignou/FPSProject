@@ -8,6 +8,7 @@
 #include "GameplayAbilitySpec.h"
 #include "GameplayTagContainer.h"
 #include "MyProject.h"
+#include "Curves/CurveFloat.h"
 #include "Actors/Characters/MyProjectCharacter.h"
 #include "Abilities/GameplayAbilityTargetActor.h"
 
@@ -18,6 +19,57 @@ class USkeletalMeshComponent;
 class AMyProjectCharacter;
 class UFPSAbilitySystemComponent;
 class UFPSWeaponGameplayAbility;
+
+
+/* Holds two vector values corresponding to min/max XYZ values for offset */
+USTRUCT(BlueprintType)
+struct FFPSRecoilValue
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	FVector MinOffset;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	FVector MaxOffset;
+	
+	FFPSRecoilValue()
+	{
+		
+	}
+};
+
+USTRUCT(BlueprintType)
+struct FFPSWeaponAbilityInfoStruct
+{
+	GENERATED_USTRUCT_BODY()
+
+	/* inverse proportional to firerate */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
+	float TimeBetweenAttacks = 0.1f;
+
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
+	float HeadshotMultiplier = 2.f;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
+	UCurveFloat* DamageCurve;
+	
+	/* If false, no tooltip will be generated when hovering this ability */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|ADS")
+	float ADSTime = 0.1f;
+	
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Recoil")
+	FFPSRecoilValue LocationRecoil;
+	
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Recoil")
+	FFPSRecoilValue RotationRecoil;
+	
+	FFPSWeaponAbilityInfoStruct()
+	{
+		DamageCurve = nullptr;
+	}
+};
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponAmmoChangedDelegate, int32, OldValue, int32, NewValue);
@@ -42,21 +94,18 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "FPSWeapon|Details")
 	FString WeaponName = "NoWeaponName";
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
+	FGameplayTagContainer RestrictedPickupTags;
+	
 	// This tag is primarily used by the first person Animation Blueprint to determine which animations to play
 	// (Rifle vs Rocket Launcher)
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
 	FGameplayTag WeaponTag;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
-	FGameplayTagContainer RestrictedPickupTags;
+	FFPSWeaponAbilityInfoStruct AbilityInfo;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
-	float ADSTime = 0.1f;
 
-	/* inverse proportional to firerate */
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
-	float TimeBetweenAttacks = 0.1f;
-	
 	// UI HUD Primary Icon when equipped. Using Sprites because of the texture atlas from ShooterGame.
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|UI")

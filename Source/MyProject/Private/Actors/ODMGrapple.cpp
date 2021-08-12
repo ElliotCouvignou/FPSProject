@@ -114,7 +114,9 @@ void AODMGrapple::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	const FVector Dist = (GetActorLocation() - ODMComponent->GetSocketLocation(FName("GrappleSocket")));
-	
+
+
+
 	if(Cable)
 	{
 		Cable->CableLength = Dist.Size();
@@ -122,6 +124,9 @@ void AODMGrapple::Tick(float DeltaTime)
 		
 	if(DoGrapplePull && HasAuthority() && !DisableGrapplePull)
 	{
+		// print(FString("GrappleSocket Locaiton: " + ODMComponent->GetSocketLocation(FName("GrappleSocket")).ToString()));
+		// print(FString("OwnerActor Locaiton: " + GetOwner()->GetActorLocation().ToString()));
+		//
 		float PlayerPullInfluence = 0.f;
 		float PlayerSpringInfluence = 0.f;
 		

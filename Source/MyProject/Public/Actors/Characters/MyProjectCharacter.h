@@ -9,7 +9,7 @@
 #include "MyProjectCharacter.generated.h"
 
 
-
+#define NUM_PLAYER_WEAPONS 4
 
 class UFPSAbilitySystemComponent;
 class AFPSWeapon;
@@ -31,9 +31,15 @@ struct MYPROJECT_API FFPSPlayerInventory
 	// Equippment/grenades
 
 	// Etc
+	FFPSPlayerInventory()
+	{
+		Weapons.SetNum(NUM_PLAYER_WEAPONS);
+	}
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterDiedDelegate, AMyProjectCharacter*, Character);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFpsWeaponDelegate, AFPSWeapon*, Weapon);
 
 
 UCLASS(config=Game)
@@ -113,7 +119,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = Ability, meta = (DefaultToSelf = Target))
 	class UWeaponAttributeSet* GetWeaponAmmoAttributeSet() const { return WeaponAmmoAttributeSet; }
 
-	UFUNCTION(BlueprintCallable, Category = "GASShooter|GSCharacter|Attributes")
+	UFUNCTION(BlueprintCallable)
 	int32 GetCharacterLevel() const;
 	
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
@@ -139,6 +145,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void EquipWeapon(AFPSWeapon* NewWeapon);
 
+
+
+	// Unequips the current weapon. Used if for example we drop the current weapon.
+	void UnEquipCurrentWeapon();
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void SwapToWeaponIndex(int Index);
+
 	UFUNCTION(Server, Reliable)
 	void ServerEquipWeapon(AFPSWeapon* NewWeapon);
 	void ServerEquipWeapon_Implementation(AFPSWeapon* NewWeapon);
@@ -147,10 +161,16 @@ public:
 	// Adds a new weapon to the inventory.
 	// Returns false if the weapon already exists in the inventory, true if it's a new weapon.
 	UFUNCTION(BlueprintCallable)
-	bool AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEquipWeapon = false);
+	bool AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEquipWeapon = false, int Index = 0);
 
 	UPROPERTY(BlueprintAssignable)
 	FCharacterDiedDelegate OnCharacterDied;
+
+	UPROPERTY(BlueprintAssignable)
+	FFpsWeaponDelegate OnWeaponAddedToInventory;
+
+	UPROPERTY(BlueprintAssignable)
+	FFpsWeaponDelegate OnCurrentWeaponChanged;	
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsAlive();

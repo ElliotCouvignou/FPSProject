@@ -81,9 +81,13 @@ void AMyProjectGameMode::MovePlayerToSafeSpawnLocation(AMyProjectCharacter* Play
 	}
 
 	if(!SpawnActor)
+	{
 		MovePlayerToSpawnLocation(Player);
-
+		return;
+	}
+		
 	Player->SetActorLocation(SpawnActor->GetActorLocation());
+
 }
 
 void AMyProjectGameMode::MovePlayerToStartSpawnLocation(AMyProjectCharacter* Player)

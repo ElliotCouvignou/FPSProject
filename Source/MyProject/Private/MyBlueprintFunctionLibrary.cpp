@@ -4,6 +4,10 @@
 #include "MyBlueprintFunctionLibrary.h"
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
 
+#define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
+
+
+
 UFPSWeaponGameplayAbility* UMyBlueprintFunctionLibrary::GetPrimaryAbilityInstanceFromHandle(
 	UAbilitySystemComponent* AbilitySystemComponent, FGameplayAbilitySpecHandle Handle)
 {
@@ -53,4 +57,35 @@ bool UMyBlueprintFunctionLibrary::IsPrimaryAbilityInstanceActive(UAbilitySystemC
 bool UMyBlueprintFunctionLibrary::IsAbilitySpecHandleValid(FGameplayAbilitySpecHandle Handle)
 {
 	return Handle.IsValid();
+}
+
+FRotator UMyBlueprintFunctionLibrary::RInterpToExact( const FRotator& Current, const FRotator& Target, float DeltaTime, float InterpSpeed, float Tolerance)
+{
+	// if DeltaTime is 0, do not perform any interpolation (Location was already calculated for that frame)
+	if( DeltaTime <= 0.f || Current == Target )
+	{
+		print(FString("DeltaTime <= 0.f || Current == Target"));
+		return Current;
+	}
+
+	// If no interp speed, jump to target value
+	if( InterpSpeed <= 0.f )
+	{
+		return Target;
+	}
+
+	const float DeltaInterpSpeed = InterpSpeed * DeltaTime;
+
+	const FRotator Delta = (Target - Current).GetNormalized();
+	
+	// If steps are too small, just return Target and assume we have reached our destination.
+	if (Delta.IsNearlyZero(Tolerance))
+	{
+		print(FString("IsNearlyZero"));
+		return Target;
+	}
+
+	// Delta Move, Clamp so we do not over shoot.
+	const FRotator DeltaMove = Delta * FMath::Clamp<float>(DeltaInterpSpeed, 0.f, 1.f);
+	return (Current + DeltaMove);//.GetNormalized();
 }

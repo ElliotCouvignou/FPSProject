@@ -18,6 +18,11 @@ enum class EAbilityInputID : uint8
 	UseODM_R		UMETA(DisplayName = "UseODM_R"),
 	UseODM_L		UMETA(DisplayName = "UseODM_L"),
 	UseEquippment	UMETA(DisplayName = "UseEquippment"),
+
+	EquipWeapon1	UMETA(DisplayName = "EquipWeapon1"),
+	EquipWeapon2	UMETA(DisplayName = "EquipWeapon2"),
+	EquipWeapon3	UMETA(DisplayName = "EquipWeapon3"),
+	EquipWeapon4	UMETA(DisplayName = "EquipWeapon4"),
 	
 	Crouch			UMETA(DisplayName = "Crouch"),
 	Jump			UMETA(DisplayName = "Jump"),

@@ -33,4 +33,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability")
 	static bool IsAbilitySpecHandleValid(FGameplayAbilitySpecHandle Handle);
+
+	/** Interpolate rotator from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
+	    This variant doesn't  jump to target on high framerates which is noticeable when this is every tick*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Math")
+	static FRotator RInterpToExact( const FRotator& Current, const FRotator& Target, float DeltaTime, float InterpSpeed, float Tolerance = .0001f);
 };

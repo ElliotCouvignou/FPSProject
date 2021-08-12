@@ -149,10 +149,10 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AMyProjectCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AMyProjectCharacter::LookUpAtRate);
+	//PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	//PlayerInputComponent->BindAxis("TurnRate", this, &AMyProjectCharacter::TurnAtRate);
+	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("LookUpRate", this, &AMyProjectCharacter::LookUpAtRate);
 
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMyProjectCharacter::TouchStarted);
@@ -240,13 +240,62 @@ void AMyProjectCharacter::EquipWeapon(AFPSWeapon* NewWeapon)
 	}
 }
 
+
+void AMyProjectCharacter::UnEquipCurrentWeapon()
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(CurrentWeaponTag);
+		CurrentWeaponTag = NoWeaponTag;
+		AbilitySystemComponent->AddLooseGameplayTag(CurrentWeaponTag);
+	}
+
+	UnEquipWeapon(CurrentWeapon);
+	CurrentWeapon = nullptr;
+
+	AMyPlayerController* PC = GetController<AMyPlayerController>();
+	if (PC && PC->IsLocalController())
+	{
+		// TODO: UPdate UI about change
+		// PC->SetEquippedWeaponPrimaryIconFromSprite(nullptr);
+		// PC->SetEquippedWeaponStatusText(FText());
+		// PC->SetPrimaryClipAmmo(0);
+		// PC->SetPrimaryReserveAmmo(0);
+		// PC->SetHUDReticle(nullptr);
+	}
+}
+
+void AMyProjectCharacter::SwapToWeaponIndex(int Index)
+{
+	int32 CurrentWeaponIndex = Inventory.Weapons.Find(CurrentWeapon);
+	
+	if (Inventory.Weapons.Num() < 2 || Index == CurrentWeaponIndex)
+	{
+		return;
+	}
+	
+	UnEquipCurrentWeapon();
+
+	if (Index < Inventory.Weapons.Num())
+	{
+		EquipWeapon(Inventory.Weapons[Index]);
+	}
+	else
+	{
+		EquipWeapon(Inventory.Weapons[0]);
+	}
+}
+
 void AMyProjectCharacter::ServerEquipWeapon_Implementation(AFPSWeapon* NewWeapon)
 {
 	EquipWeapon(NewWeapon);
 }
 
-bool AMyProjectCharacter::AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEquipWeapon)
+bool AMyProjectCharacter::AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEquipWeapon, int Index)
 {
+	if(!NewWeapon)
+		return false;
+	
 	if (Inventory.Weapons.Contains(NewWeapon))
 	{
 		USoundCue* PickupSound = NewWeapon->GetPickupSound();
@@ -301,10 +350,18 @@ bool AMyProjectCharacter::AddWeaponToInventory(AFPSWeapon* NewWeapon, bool bEqui
 	{
 		return false;
 	}
+
+	// set new index (check for unequip)
+	if(Inventory.Weapons[Index])
+	{
+		UnEquipWeapon(Inventory.Weapons[Index]);
+	}
 	
-	Inventory.Weapons.Add(NewWeapon);
+	Inventory.Weapons[Index] = NewWeapon;
 	NewWeapon->SetOwningCharacter(this);
-	NewWeapon->AddAbilities();
+
+	OnWeaponAddedToInventory.Broadcast(NewWeapon);
+	//NewWeapon->AddAbilities();
 
 	if (bEquipWeapon)
 	{
@@ -326,7 +383,7 @@ bool AMyProjectCharacter::IsAlive()
 
 void AMyProjectCharacter::Die()
 {
-	DisableInput(GetController<APlayerController>());
+	//DisableInput(GetController<APlayerController>());
 
 	OnCharacterDied.Broadcast(this);
 
@@ -358,7 +415,7 @@ void AMyProjectCharacter::Die()
 void AMyProjectCharacter::FinishDying()
 {
 	// Respawn at new locaiton
-	EnableInput(GetController<APlayerController>());
+	//EnableInput(GetController<APlayerController>());
 	//Multicast_OnRespawn();
 	BP_DoRagdollEffect(false);
 
@@ -537,6 +594,7 @@ void AMyProjectCharacter::SetCurrentWeapon(AFPSWeapon* NewWeapon, AFPSWeapon* La
 		UAnimMontage* Equip1PMontage = CurrentWeapon->GetEquip1PMontage();
 		if (Equip1PMontage && GetFirstPersonMesh())
 		{
+			print(FString("Play valid EquipMontage"));
 			GetFirstPersonMesh()->GetAnimInstance()->Montage_Play(Equip1PMontage);
 		}
 
@@ -551,6 +609,8 @@ void AMyProjectCharacter::SetCurrentWeapon(AFPSWeapon* NewWeapon, AFPSWeapon* La
 		// This will clear HUD, tags etc
 		// TODO: UnEquipCurrentWeapon();
 	}
+
+	OnCurrentWeaponChanged.Broadcast(NewWeapon);
 	
 }
 

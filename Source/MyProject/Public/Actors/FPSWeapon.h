@@ -54,6 +54,12 @@ struct FFPSWeaponAbilityInfoStruct
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
 	UCurveFloat* DamageCurve;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
+	USoundBase* ShootSound;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
+	TSubclassOf<UCameraShakeBase> ShootCameraShake;
 	
 	/* If false, no tooltip will be generated when hovering this ability */
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|ADS")
@@ -68,6 +74,8 @@ struct FFPSWeaponAbilityInfoStruct
 	FFPSWeaponAbilityInfoStruct()
 	{
 		DamageCurve = nullptr;
+		ShootSound = nullptr;
+		ShootCameraShake = nullptr;
 	}
 };
 
@@ -299,6 +307,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|Details")
 	FText DefaultStatusText;
 
+	/* only useful for guns in single fire that need an animation between shots */
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|Animation")
+	UAnimMontage* PlayerPumpAnimation;
+	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|Animation")
 	UAnimMontage* Equip1PMontage;
 

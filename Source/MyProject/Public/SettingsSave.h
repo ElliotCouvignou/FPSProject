@@ -22,20 +22,20 @@ public:
 
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Controls")
-	float MouseSensitivity;
+	float MouseSensitivity = 1.0f;
 	
 
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float Master;
+	float Master = 0.5f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float Effects;
+	float Effects = 0.5f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float Music;
+	float Music = 0.5f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
-	float Ambient;
+	float Ambient = 0.5f;
 	
 };

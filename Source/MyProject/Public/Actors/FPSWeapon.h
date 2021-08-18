@@ -11,6 +11,7 @@
 #include "Curves/CurveFloat.h"
 #include "Actors/Characters/MyProjectCharacter.h"
 #include "Abilities/GameplayAbilityTargetActor.h"
+#include "MatineeCameraShake.h"
 
 #include "FPSWeapon.generated.h"
 
@@ -39,45 +40,22 @@ struct FFPSRecoilValue
 	}
 };
 
-USTRUCT(BlueprintType)
-struct FFPSWeaponAbilityInfoStruct
-{
-	GENERATED_USTRUCT_BODY()
-
-	/* inverse proportional to firerate */
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
-	float TimeBetweenAttacks = 0.1f;
 
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
-	float HeadshotMultiplier = 2.f;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
-	UCurveFloat* DamageCurve;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
-	USoundBase* ShootSound;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Shoot")
-	TSubclassOf<UCameraShakeBase> ShootCameraShake;
-	
-	/* If false, no tooltip will be generated when hovering this ability */
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|ADS")
-	float ADSTime = 0.1f;
-	
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Recoil")
-	FFPSRecoilValue LocationRecoil;
-	
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeaponAbility|Recoil")
-	FFPSRecoilValue RotationRecoil;
-	
-	FFPSWeaponAbilityInfoStruct()
-	{
-		DamageCurve = nullptr;
-		ShootSound = nullptr;
-		ShootCameraShake = nullptr;
-	}
-};
+// USTRUCT(BlueprintType)
+// struct FFPSWeaponAbilityInfoStruct
+// {
+// 	GENERATED_USTRUCT_BODY()
+//
+// 	
+// 	
+// 	FFPSWeaponAbilityInfoStruct()
+// 	{
+// 		DamageCurve = nullptr;
+// 		ShootSound = nullptr;
+// 		ShootCameraShake = nullptr;
+// 	}
+// };
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponAmmoChangedDelegate, int32, OldValue, int32, NewValue);
@@ -110,10 +88,57 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
 	FGameplayTag WeaponTag;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
-	FFPSWeaponAbilityInfoStruct AbilityInfo;
+
+	
+	/* inverse proportional to firerate */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot")
+	float TimeBetweenAttacks = 0.1f;
 
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot")
+	float HeadshotMultiplier = 2.f;
+
+	/* e.g. shotguns */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot")
+	int NumBulletsPerShot = 1;
+
+	// Base targeting spread (degrees)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot|Spread")
+	float BaseSpread;
+
+	// Aiming spread modifier (FinalSpread *= AimingSpreadMod)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot|Spread")
+	float AimingSpreadMod = 1.f;
+
+	// Continuous targeting: spread increment
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot|Spread")
+	float TargetingSpreadIncrement;
+
+	// Continuous targeting: max increment
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot|Spread")
+	float TargetingSpreadMax;
+	
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot")
+	UCurveFloat* DamageCurve;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot")
+	USoundBase* ShootSound;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Shoot")
+	TSubclassOf<UMatineeCameraShake> ShootCameraShake;
+	
+	/* If false, no tooltip will be generated when hovering this ability */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|ADS")
+	float ADSTime = 0.1f;
+	
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Recoil")
+	FFPSRecoilValue LocationRecoil;
+	
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Recoil")
+	FFPSRecoilValue RotationRecoil;
+
+
+	
 	// UI HUD Primary Icon when equipped. Using Sprites because of the texture atlas from ShooterGame.
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "FPSWeapon|UI")
@@ -190,6 +215,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "FPSWeapon|Details")
 	virtual void ResetWeapon();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FPSWeapon|Details")
+	FVector GetWeaponMesh1PDesiredOffsetFromCamera();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FPSWeapon|Details")
+	FTransform GetWeaponMesh1PEquippedRelativeTransform();
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "FPSWeapon|Details")
+	FTransform GetWeaponMesh3PEquippedRelativeTransform();
 
 	UFUNCTION(BlueprintCallable, Category = "FPSWeapon|Details")
 	virtual int32 GetPrimaryClipAmmo() const;
@@ -283,7 +316,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "FPSWeapon|Details")
 	USkeletalMeshComponent* WeaponMesh3P;
 
-	// Relative Location of weapon 1P Mesh when equipped
+	/* Relative Desired Offset from Player Camera we want to hold this weapon at */ 
+	UPROPERTY(EditDefaultsOnly, Category = "FPSWeapon|Details")
+	FVector WeaponMesh1PDesiredOffsetFromCamera;
+
+	// Relative Transform from owner's FPS camera to hold the gun at 
 	UPROPERTY(EditDefaultsOnly, Category = "FPSWeapon|Details")
 	FTransform WeaponMesh1PEquippedRelativeTransform;
 
@@ -296,7 +333,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "FPSWeapon|Details")
 	TArray<TSubclassOf<UFPSWeaponGameplayAbility>> Abilities;
-
+	
 	UPROPERTY(BlueprintReadOnly, Category = "FPSWeapon|Details")
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 

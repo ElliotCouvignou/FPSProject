@@ -52,6 +52,27 @@ bool UFPSAbilitySystemComponent::BatchRPCTryActivateAbility(FGameplayAbilitySpec
 	
 }
 
+void UFPSAbilitySystemComponent::K2_AddLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count)
+{
+	AddLooseGameplayTag(GameplayTag, Count);
+}
+
+void UFPSAbilitySystemComponent::K2_AddLooseGameplayTags(const FGameplayTagContainer& GameplayTags, int32 Count)
+{
+	AddLooseGameplayTags(GameplayTags, Count);
+}
+
+void UFPSAbilitySystemComponent::K2_RemoveLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count)
+{
+	RemoveLooseGameplayTag(GameplayTag, Count);
+}
+
+void UFPSAbilitySystemComponent::K2_RemoveLooseGameplayTags(const FGameplayTagContainer& GameplayTags, int32 Count)
+{
+	RemoveLooseGameplayTags(GameplayTags, Count);
+}
+
+
 float UFPSAbilitySystemComponent::PlayMontageForMesh(UGameplayAbility* InAnimatingAbility, USkeletalMeshComponent* InMesh, FGameplayAbilityActivationInfo ActivationInfo, UAnimMontage* NewAnimMontage, float InPlayRate, FName StartSectionName, bool bReplicateMontage)
 {
 	UFPSWeaponGameplayAbility* InAbility = Cast<UFPSWeaponGameplayAbility>(InAnimatingAbility);

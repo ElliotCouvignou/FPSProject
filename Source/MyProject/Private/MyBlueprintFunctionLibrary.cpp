@@ -3,6 +3,7 @@
 
 #include "MyBlueprintFunctionLibrary.h"
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
+#include "AbilitySystem/MyGameplayEffectTypes.h"
 
 #define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
 
@@ -52,6 +53,29 @@ bool UMyBlueprintFunctionLibrary::IsPrimaryAbilityInstanceActive(UAbilitySystemC
 	}
 
 	return false;
+}
+
+FGameplayAbilityTargetDataHandle UMyBlueprintFunctionLibrary::EffectContextGetTargetData(
+	FGameplayEffectContextHandle EffectContextHandle)
+{
+	FFPSGameplayEffectContext* EffectContext = static_cast<FFPSGameplayEffectContext*>(EffectContextHandle.Get());
+	
+	if (EffectContext)
+	{
+		return EffectContext->GetTargetData();
+	}
+
+	return FGameplayAbilityTargetDataHandle();
+}
+
+void UMyBlueprintFunctionLibrary::EffectContextAddTargetData(FGameplayEffectContextHandle EffectContextHandle, const FGameplayAbilityTargetDataHandle& TargetData)
+{
+	FFPSGameplayEffectContext* EffectContext = static_cast<FFPSGameplayEffectContext*>(EffectContextHandle.Get());
+
+	if (EffectContext)
+	{
+		EffectContext->AddTargetData(TargetData);
+	}
 }
 
 bool UMyBlueprintFunctionLibrary::IsAbilitySpecHandleValid(FGameplayAbilitySpecHandle Handle)

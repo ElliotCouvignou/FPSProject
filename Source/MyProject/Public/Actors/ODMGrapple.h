@@ -44,12 +44,17 @@ protected:
 	float InitProjectileVelocity = 5000.f;
 
 	/* Constant pulling force regardless of spring */
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	float PullStrength = 100.f;  //math later, fuyncitonality first
+	// UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	// float PullStrength = 100.f;  //math later, fuyncitonality first
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	float SpringFactor = 1.f; // Pullstrength += SPringFactor/(offsetdist)
 
+	/* Once we move fast enough in pulling direction (projected) then cut down/stop pulling more */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* PullStrengthSpeedDirection;
+
+	
 	/* controls how much camera affects over movement input */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	float PlayerControlRotationInfluence = 1.f;

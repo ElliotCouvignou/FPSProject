@@ -129,118 +129,124 @@ void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 			// 	SetShield(FMath::Clamp<float>(NewShield, 0.0f, GetMaxShield()));
 			// }
 
-			
-			if (LocalDamageDone > 0)
+			// Interesting mechanic here, if we do  < 1 dmg then just ignore it entirely and have no damage done
+			// This is nice for guns that are at max dmg range and are doing miniscule dmg (esp present for shotguns)
+			if (LocalDamageDone >= 1.f)
 			{
 				// Apply the health change and then clamp it
 				const float NewHealth = GetHealth() - LocalDamageDone;
 				SetHealth(FMath::Clamp(NewHealth, 0.0f, GetMaxHealth()));
-			}
-	
-			if (TargetCharacter && WasAlive)
-			{
-				// This is the log statement for damage received. Turned off for live games.
-				//UE_LOG(LogTemp, Log, TEXT("%s() %s Damage Received: %f"), *FString(__FUNCTION__), *GetOwningActor()->GetName(), LocalDamageDone);
-	
-				// Show damage number for the Source player unless it was self damage
-				// if (SourceActor != TargetActor)
-				// {
-				// 	AGSPlayerController* PC = Cast<AGSPlayerController>(SourceController);
-				// 	if (PC)
-				// 	{
-				// 		FGameplayTagContainer DamageNumberTags;
-				//
-				// 		if (Data.EffectSpec.DynamicAssetTags.HasTag(HeadShotTag))
-				// 		{
-				// 			DamageNumberTags.AddTagFast(HeadShotTag);
-				// 		}
-				//
-				// 		PC->ShowDamageNumber(LocalDamageDone, TargetCharacter, DamageNumberTags);
-				// 	}
-				// }
-	
-				AMyPlayerController* SourcePC = Cast<AMyPlayerController>(SourceController);
-				if (!TargetCharacter->IsAlive() && SourcePC)
+				if (TargetCharacter && WasAlive)
 				{
-					// TODO: figure out how to fill dmg and headshot infos
-					FKillInfoStruct KillInfoStruct;
-					KillInfoStruct.PlayerName = TargetCharacter->PlayerName;
-					SourcePC->OnPlayerKilled(KillInfoStruct);
-					
-					AMyPlayerController* TargetPC = Cast<AMyPlayerController>(TargetController);
-					if(TargetPC && FpsWeapon)
-					{
-						FDiedInfoStruct InfoStruct;
-						InfoStruct.PlayerName = SourceCharacter->PlayerName;
-						InfoStruct.HealthRemaining = Source->GetNumericAttribute(GetHealthAttribute());
-						InfoStruct.WeaponName =  FpsWeapon->WeaponName;
-						TargetPC->OnPlayerDied(InfoStruct);
-					}
-
-					AMyProjectGameMode* GM = GetWorld()->GetAuthGameMode<AMyProjectGameMode>();
-					if(GM)
-					{
-						FPlayerDeathInfoStruct Info;
-						Info.bHeadShot = Context.GetHitResult()->BoneName.IsEqual("head");
-						Info.SourceWeapon = FpsWeapon;
-						Info.VictimName = TargetCharacter->PlayerName;
-						Info.KillerName = SourceCharacter->PlayerName;	
-						GM->OnPlayerDied(Info);
-					}
-
-					// Todo: streamline this method to add KDA
-					// TODO: assists
-					AFPSPlayerState* SourcePS = SourceCharacter->GetPlayerState<AFPSPlayerState>();
-					if(SourcePS)
-					{
-						
-						SourcePS->Points += 100.f;
-						SourcePS->Kills ++;
-					}
-
-					AFPSPlayerState* TargetPS = TargetCharacter->GetPlayerState<AFPSPlayerState>();
-					if(TargetPS)
-					{
-						
-						TargetPS->Deaths++;
-					}
-					
-					//print(FString("Dead lollll"));
-					
-					// TargetCharacter was alive before this damage and now is not alive, give XP and Gold bounties to Source.
-					// Don't give bounty to self.
-					// if (SourceController != TargetController)
+					// This is the log statement for damage received. Turned off for live games.
+					//UE_LOG(LogTemp, Log, TEXT("%s() %s Damage Received: %f"), *FString(__FUNCTION__), *GetOwningActor()->GetName(), LocalDamageDone);
+		
+					// Show damage number for the Source player unless it was self damage
+					// if (SourceActor != TargetActor)
 					// {
-					// 	// Create a dynamic instant Gameplay Effect to give the bounties
-					// 	UGameplayEffect* GEBounty = NewObject<UGameplayEffect>(GetTransientPackage(), FName(TEXT("Bounty")));
-					// 	GEBounty->DurationPolicy = EGameplayEffectDurationType::Instant;
+					// 	AGSPlayerController* PC = Cast<AGSPlayerController>(SourceController);
+					// 	if (PC)
+					// 	{
+					// 		FGameplayTagContainer DamageNumberTags;
 					//
-					// 	int32 Idx = GEBounty->Modifiers.Num();
-					// 	GEBounty->Modifiers.SetNum(Idx + 2);
+					// 		if (Data.EffectSpec.DynamicAssetTags.HasTag(HeadShotTag))
+					// 		{
+					// 			DamageNumberTags.AddTagFast(HeadShotTag);
+					// 		}
 					//
-					// 	FGameplayModifierInfo& InfoXP = GEBounty->Modifiers[Idx];
-					// 	InfoXP.ModifierMagnitude = FScalableFloat(GetXPBounty());
-					// 	InfoXP.ModifierOp = EGameplayModOp::Additive;
-					// 	InfoXP.Attribute = UPlayerAttributeSet::GetXPAttribute();
-					//
-					// 	FGameplayModifierInfo& InfoGold = GEBounty->Modifiers[Idx + 1];
-					// 	InfoGold.ModifierMagnitude = FScalableFloat(GetGoldBounty());
-					// 	InfoGold.ModifierOp = EGameplayModOp::Additive;
-					// 	InfoGold.Attribute = UPlayerAttributeSet::GetGoldAttribute();
-					//
-					// 	Source->ApplyGameplayEffectToSelf(GEBounty, 1.0f, Source->MakeEffectContext());
+					// 		PC->ShowDamageNumber(LocalDamageDone, TargetCharacter, DamageNumberTags);
+					// 	}
 					// }
-				}
 
-				if(SourcePC)
-				{
-					FDamageInfoStruct DamageInfoStruct;
+					AMyPlayerController* TargetPC = Cast<AMyPlayerController>(TargetController);
+					if(TargetPC)
+					{
+						TargetPC->OnPlayerDamageTaken(SourceActor);
+					}
+		
+					AMyPlayerController* SourcePC = Cast<AMyPlayerController>(SourceController);
+					if (!TargetCharacter->IsAlive() && SourcePC)
+					{
+						// TODO: figure out how to fill dmg and headshot infos
+						FKillInfoStruct KillInfoStruct;
+						KillInfoStruct.PlayerName = TargetCharacter->PlayerName;
+						SourcePC->OnPlayerKilled(KillInfoStruct);
+						
+						
+						if(TargetPC && FpsWeapon)
+						{
+							FDiedInfoStruct InfoStruct;
+							InfoStruct.PlayerName = SourceCharacter->PlayerName;
+							InfoStruct.HealthRemaining = Source->GetNumericAttribute(GetHealthAttribute());
+							InfoStruct.WeaponName =  FpsWeapon->WeaponName;
+							TargetPC->OnPlayerDied(InfoStruct);
+						}
 
-					// TODO: replace this with getter for head name
-					DamageInfoStruct.bHeadShot = Context.GetHitResult()->BoneName.IsEqual("head");
-					DamageInfoStruct.bPlayerDied = !TargetCharacter->IsAlive();
-					DamageInfoStruct.DamageDone = LocalDamageDone;
-					SourcePC->OnPlayerDamageDone(DamageInfoStruct);
+						AMyProjectGameMode* GM = GetWorld()->GetAuthGameMode<AMyProjectGameMode>();
+						if(GM)
+						{
+							FPlayerDeathInfoStruct Info;
+							Info.bHeadShot = Context.GetHitResult()->BoneName.IsEqual("head");
+							Info.SourceWeapon = FpsWeapon;
+							Info.VictimName = TargetCharacter->PlayerName;
+							Info.KillerName = SourceCharacter->PlayerName;	
+							GM->OnPlayerDied(Info);
+						}
+
+						// Todo: streamline this method to add KDA
+						// TODO: assists
+						AFPSPlayerState* SourcePS = SourceCharacter->GetPlayerState<AFPSPlayerState>();
+						if(SourcePS)
+						{
+							
+							SourcePS->Points += 100.f;
+							SourcePS->Kills ++;
+						}
+
+						AFPSPlayerState* TargetPS = TargetCharacter->GetPlayerState<AFPSPlayerState>();
+						if(TargetPS)
+						{
+							
+							TargetPS->Deaths++;
+						}
+						
+						//print(FString("Dead lollll"));
+						
+						// TargetCharacter was alive before this damage and now is not alive, give XP and Gold bounties to Source.
+						// Don't give bounty to self.
+						// if (SourceController != TargetController)
+						// {
+						// 	// Create a dynamic instant Gameplay Effect to give the bounties
+						// 	UGameplayEffect* GEBounty = NewObject<UGameplayEffect>(GetTransientPackage(), FName(TEXT("Bounty")));
+						// 	GEBounty->DurationPolicy = EGameplayEffectDurationType::Instant;
+						//
+						// 	int32 Idx = GEBounty->Modifiers.Num();
+						// 	GEBounty->Modifiers.SetNum(Idx + 2);
+						//
+						// 	FGameplayModifierInfo& InfoXP = GEBounty->Modifiers[Idx];
+						// 	InfoXP.ModifierMagnitude = FScalableFloat(GetXPBounty());
+						// 	InfoXP.ModifierOp = EGameplayModOp::Additive;
+						// 	InfoXP.Attribute = UPlayerAttributeSet::GetXPAttribute();
+						//
+						// 	FGameplayModifierInfo& InfoGold = GEBounty->Modifiers[Idx + 1];
+						// 	InfoGold.ModifierMagnitude = FScalableFloat(GetGoldBounty());
+						// 	InfoGold.ModifierOp = EGameplayModOp::Additive;
+						// 	InfoGold.Attribute = UPlayerAttributeSet::GetGoldAttribute();
+						//
+						// 	Source->ApplyGameplayEffectToSelf(GEBounty, 1.0f, Source->MakeEffectContext());
+						// }
+					}
+
+					if(SourcePC)
+					{
+						FDamageInfoStruct DamageInfoStruct;
+
+						// TODO: replace this with getter for head name
+						DamageInfoStruct.bHeadShot = Context.GetHitResult()->BoneName.IsEqual("head");
+						DamageInfoStruct.bPlayerDied = !TargetCharacter->IsAlive();
+						DamageInfoStruct.DamageDone = LocalDamageDone;
+						SourcePC->OnPlayerDamageDone(DamageInfoStruct);
+					}
 				}
 			}
 		}

@@ -272,6 +272,21 @@ void AFPSWeapon::ResetWeapon()
 	StatusText = DefaultStatusText;
 }
 
+FVector AFPSWeapon::GetWeaponMesh1PDesiredOffsetFromCamera()
+{
+	return WeaponMesh1PDesiredOffsetFromCamera;
+}
+
+FTransform AFPSWeapon::GetWeaponMesh1PEquippedRelativeTransform()
+{
+	return WeaponMesh1PEquippedRelativeTransform;
+}
+
+FTransform AFPSWeapon::GetWeaponMesh3PEquippedRelativeTransform()
+{
+	return WeaponMesh3PEquippedRelativeTransform;
+}
+
 int32 AFPSWeapon::GetPrimaryClipAmmo() const
 {
 	return PrimaryClipAmmo;

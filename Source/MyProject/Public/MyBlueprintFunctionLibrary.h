@@ -30,7 +30,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ability")
 	static bool IsPrimaryAbilityInstanceActive(UAbilitySystemComponent* AbilitySystemComponent, FGameplayAbilitySpecHandle Handle);
 
-	
+	// Returns TargetData
+	UFUNCTION(BlueprintCallable, Category = "Ability|EffectContext", Meta = (DisplayName = "GetTargetData"))
+	static FGameplayAbilityTargetDataHandle EffectContextGetTargetData(FGameplayEffectContextHandle EffectContextHandle);
+
+	UFUNCTION(BlueprintCallable, Category = "Ability|EffectContext", Meta = (DisplayName = "AddTargetData"))
+	static void EffectContextAddTargetData(FGameplayEffectContextHandle EffectContextHandle, const FGameplayAbilityTargetDataHandle& TargetData);
+
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability")
 	static bool IsAbilitySpecHandleValid(FGameplayAbilitySpecHandle Handle);
 

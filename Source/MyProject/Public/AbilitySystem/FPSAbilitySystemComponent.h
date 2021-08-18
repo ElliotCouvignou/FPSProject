@@ -81,11 +81,26 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	virtual bool BatchRPCTryActivateAbility(FGameplayAbilitySpecHandle InAbilityHandle, bool EndAbilityImmediately);
 
+	// Exposes AddLooseGameplayTag to Blueprint. This tag is *not* replicated.
+	UFUNCTION(BlueprintCallable, Category = "Abilities", Meta = (DisplayName = "AddLooseGameplayTag"))
+	void K2_AddLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count = 1);
+
+	// Exposes AddLooseGameplayTags to Blueprint. These tags are *not* replicated.
+	UFUNCTION(BlueprintCallable, Category = "Abilities", Meta = (DisplayName = "AddLooseGameplayTags"))
+	void K2_AddLooseGameplayTags(const FGameplayTagContainer& GameplayTags, int32 Count = 1);
+
+	// Exposes RemoveLooseGameplayTag to Blueprint. This tag is *not* replicated.
+	UFUNCTION(BlueprintCallable, Category = "Abilities", Meta = (DisplayName = "RemoveLooseGameplayTag"))
+	void K2_RemoveLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count = 1);
+
+	// Exposes RemoveLooseGameplayTags to Blueprint. These tags are *not* replicated.
+	UFUNCTION(BlueprintCallable, Category = "Abilities", Meta = (DisplayName = "RemoveLooseGameplayTags"))
+	void K2_RemoveLooseGameplayTags(const FGameplayTagContainer& GameplayTags, int32 Count = 1);
+	
 	// Plays a montage and handles replication and prediction based on passed in ability/activation info
 	virtual float PlayMontageForMesh(UGameplayAbility* InAnimatingAbility, class USkeletalMeshComponent* InMesh, FGameplayAbilityActivationInfo ActivationInfo, UAnimMontage* Montage, float InPlayRate, FName StartSectionName = NAME_None, bool bReplicateMontage = true);
 
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
-
 
 	// Plays a montage without updating replication/prediction structures. Used by simulated proxies when replication tells them to play a montage.
 	virtual float PlayMontageSimulatedForMesh(USkeletalMeshComponent* InMesh, UAnimMontage* Montage, float InPlayRate, FName StartSectionName = NAME_None);

@@ -23,6 +23,15 @@ void AMyPlayerController::OnPlayerDamageDone_Implementation(const FDamageInfoStr
 	BP_ClientOnPlayerDamageDone(InfoStruct);
 }
 
+void AMyPlayerController::OnPlayerDamageTaken_Implementation(const AActor* Shooter)
+{
+	if(MainGameplayWidget)
+	{
+		MainGameplayWidget->OnPlayerDamageTaken(Shooter);
+	}	
+}
+
+
 void AMyPlayerController::OnPlayerKilled_Implementation(const FKillInfoStruct& InfoStruct)
 {
 	if(MainGameplayWidget)

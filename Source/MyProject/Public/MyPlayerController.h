@@ -35,6 +35,11 @@ public:
 	void OnPlayerDamageDone(const FDamageInfoStruct& InfoStruct);
 	void OnPlayerDamageDone_Implementation(const FDamageInfoStruct& InfoStruct);
 	bool OnPlayerDamageDone_Validate(const FDamageInfoStruct& InfoStruct) { return true; }
+
+	UFUNCTION(BlueprintCallable, Client, WithValidation, Reliable)
+	void OnPlayerDamageTaken(const AActor* Shooter);
+	void OnPlayerDamageTaken_Implementation(const AActor* Shooter);
+	bool OnPlayerDamageTaken_Validate(const AActor* Shooter) { return true; }
 	
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void BP_ClientOnPlayerDamageDone(const FDamageInfoStruct& InfoStruct);

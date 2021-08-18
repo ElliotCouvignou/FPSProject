@@ -274,9 +274,9 @@ void AMyGTGA_Trace::AimWithSourceOrientation(const AActor* InSourceActor, FColli
 {
 
 	if (!OwningAbility) // Server and launching client only
-		{
+	{
 		return;
-		}
+	}
 
 	// Default values in case of AI Controller
 	FVector ViewStart = TraceStart;
@@ -323,9 +323,17 @@ void AMyGTGA_Trace::AimWithSourceOrientation(const AActor* InSourceActor, FColli
 	// 		AdjustedAimDir = AdjustedAimRot.Vector();
 	// 	}
 	// }
+	CurrentTargetingSpread = FMath::Min(TargetingSpreadMax, CurrentTargetingSpread + TargetingSpreadIncrement);
+	const float CurrentSpread = GetCurrentSpread();
 
-	const FVector ShootDir = StartLocation.GetTargetingTransform().GetRotation().GetForwardVector();
+	const float ConeHalfAngle = FMath::DegreesToRadians(CurrentSpread * 0.5f);
+	const int32 RandomSeed = FMath::Rand();
+	FRandomStream WeaponRandomStream(RandomSeed);
 	
+	FVector ShootDir = StartLocation.GetTargetingTransform().GetRotation().GetForwardVector();
+	ShootDir = WeaponRandomStream.VRandCone(ShootDir, ConeHalfAngle, ConeHalfAngle);
+
+
 	OutTraceEnd = TraceStart + (ShootDir * MaxRange);
 }
 

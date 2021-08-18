@@ -14,7 +14,9 @@ public class MyProject : ModuleRules
 			"CableComponent",
 			"GameplayTags",
 			"GameplayAbilities",
-			"GameplayTasks", });
+			"GameplayTasks",
+			"GameplayCameras",
+		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] {
 				"CableComponent",

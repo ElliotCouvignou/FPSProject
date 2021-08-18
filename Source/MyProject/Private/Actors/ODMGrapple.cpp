@@ -113,7 +113,7 @@ void AODMGrapple::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	const FVector Dist = (GetActorLocation() - ODMComponent->GetSocketLocation(FName("GrappleSocket")));
+	const FVector Dist = (GetActorLocation() - GetOwner()->GetActorLocation()/*ODMComponent->GetSocketLocation(FName("GrappleSocket"))*/);
 
 
 
@@ -154,12 +154,15 @@ void AODMGrapple::Tick(float DeltaTime)
 			//DrawDebugLine(GetWorld(), Character->GetActorLocation(), Character->GetActorLocation() + (InputVector *200.f), FColor::Purple, false, 5.f, 0.f, 1.f);
 		}
 		
-		// not really force more like change in velocity but intuitively this is nicer to me idk lol 
-		FVector Force = Dist.GetSafeNormal() * (DeltaTime * PullStrength);
-		Force += InputVector.ProjectOnTo(Force) * Force.Size() * PlayerPullInfluence;
-		
+		// not really force more like change in velocity but intuitively this is nicer to me idk lol
+		// TODO: find value for curve im too douinked for this rn
 		// Try above but in general when moving against the grapple
 		const FVector Vel = Character->GetCharacterMovement()->Velocity;
+		float SpeedInPullDirection = FMath::Clamp(Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal()), 0.f, 99999999.f);
+
+		FVector Force = Dist.GetSafeNormal() * (DeltaTime * PullStrengthSpeedDirection->GetFloatValue(SpeedInPullDirection));
+		Force += InputVector.ProjectOnTo(Force) * Force.Size() * PlayerPullInfluence;
+				
 		const float Angle = FMath::Acos(FVector::DotProduct(Vel , Force )/ Vel.Size()/ Force.Size());
 		if(Angle > PI / 2)
 		{

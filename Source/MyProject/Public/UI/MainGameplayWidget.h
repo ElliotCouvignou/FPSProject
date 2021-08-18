@@ -18,6 +18,8 @@ class MYPROJECT_API UMainGameplayWidget : public UUserWidget
 
 public:
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnPlayerDamageTaken(const AActor* Shooter);
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void OnPlayerKilled(const FKillInfoStruct& InfoStruct);

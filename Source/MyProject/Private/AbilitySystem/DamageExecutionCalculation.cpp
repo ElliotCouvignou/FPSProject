@@ -87,7 +87,7 @@ void UDamageExecutionCalculation::Execute_Implementation(const FGameplayEffectCu
 	UCurveFloat* DamageCurve;
 	if(FpsWeapon)
 	{
-		DamageCurve = FpsWeapon->AbilityInfo.DamageCurve;
+		DamageCurve = FpsWeapon->DamageCurve;
 	
 		if(DamageCurve)
 		{

@@ -158,8 +158,10 @@ void AODMGrapple::Tick(float DeltaTime)
 		// TODO: find value for curve im too douinked for this rn
 		// Try above but in general when moving against the grapple
 		const FVector Vel = Character->GetCharacterMovement()->Velocity;
-		float SpeedInPullDirection = FMath::Clamp(Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal()), 0.f, 99999999.f);
+		SpeedInPullDirection = FMath::Clamp(Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal()), 0.f, 99999999.f);
+		//print(FString("SpeedInPullDirection: " + FString::SanitizeFloat(SpeedInPullDirection,2)));
 
+		
 		FVector Force = Dist.GetSafeNormal() * (DeltaTime * PullStrengthSpeedDirection->GetFloatValue(SpeedInPullDirection));
 		Force += InputVector.ProjectOnTo(Force) * Force.Size() * PlayerPullInfluence;
 				

@@ -30,7 +30,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	bool DisableGrapplePull = false; 
-	
+
+	/* Current used as MetaSound Parameter to affect pulling sound */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float SpeedInPullDirection;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = true))
 	USceneComponent* ODMComponent;

@@ -140,8 +140,8 @@ void AMyProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	// PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	// PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMyProjectCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMyProjectCharacter::MoveRight);

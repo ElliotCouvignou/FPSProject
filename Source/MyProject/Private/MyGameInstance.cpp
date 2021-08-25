@@ -11,6 +11,13 @@ UMyGameInstance::UMyGameInstance()
 	SettingsSave = Cast<USettingsSave>(UGameplayStatics::CreateSaveGameObject(USettingsSave::StaticClass()));
 }
 
+void UMyGameInstance::Init()
+{
+	Super::Init();
+
+	LoadSettingsData();
+}
+
 void UMyGameInstance::LoadSettingsData()
 {
 	if (SettingsSaveSlot.Len() > 0)

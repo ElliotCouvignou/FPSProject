@@ -6,7 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "Slate/WidgetRenderer.h"
 #include "Widgets/SVirtualWindow.h"
-
+#include "RenderingThread.h"
 #include "RenderTargetWidgetComponent.generated.h"
 
 
@@ -18,17 +18,24 @@ class MYPROJECT_API URenderTargetWidgetComponent : public USceneComponent
 public:
 	virtual void Init();
 
+	UFUNCTION(BlueprintCallable)
 	void Render( float DeltaTime = 0.0f );
 
+	UFUNCTION(BlueprintCallable)
 	void Resize( FIntPoint& NewSize );
 
 	virtual void BeginPlay() override;
 
-	protected:
+protected:
 	virtual void OnUnregister() override;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> RenderingWidgetClass;
 
-	private:
+	UPROPERTY(EditDefaultsOnly)
+	UTextureRenderTarget2D* ScriptedTextureReference;
+	
+private:
 	// The cached window containing the rendering widget
 	TSharedPtr<SVirtualWindow>  SlateWindow;
 	TSharedPtr<FHittestGrid>    SlateGrid;

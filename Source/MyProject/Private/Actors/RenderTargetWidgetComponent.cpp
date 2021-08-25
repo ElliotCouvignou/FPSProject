@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Input/HittestGrid.h"
+#include "UI/RenderTargetWidget.h"
 
 
 // Constructor
@@ -61,22 +62,26 @@ void URenderTargetWidgetComponent::Init()
     // Create widget to render into RTT
     // Load a class from a blueprint object,
     // Don't forget to add "_C" at the end to get the class
-    FString Path = "WidgetBlueprint'/Game/UI/UMG_RenderMaterial.UMG_RenderMaterial_C'";
-    TSubclassOf<UUserWidget> ClassWidget = LoadClass<UUserWidget>(nullptr, *Path);
+    if(!RenderingWidgetClass)
+        return;
+    
+    RenderingWidget = CreateWidget<UUserWidget>( GetWorld(), URenderTargetWidget::StaticClass() );
 
-    RenderingWidget = CreateWidget<UUserWidget>( GetWorld(), ClassWidget );
+    ScriptedTexture = ScriptedTextureReference;
+    if(!ScriptedTextureReference)
+    {
+        // Create render target resource
+        FString Name = GetName() + "_ScriptTxt";
+        ScriptedTexture = NewObject<UTextureRenderTarget2D>(this, UTextureRenderTarget2D::StaticClass(), *Name);
+        check( ScriptedTexture );
 
-    // Create render target resource
-    FString Name = GetName() + "_ScriptTxt";
-    ScriptedTexture = NewObject<UTextureRenderTarget2D>(this, UTextureRenderTarget2D::StaticClass(), *Name);
-    check( ScriptedTexture );
+        ScriptedTexture->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
+        ScriptedTexture->SizeX      = 256;
+        ScriptedTexture->SizeY      = 256;
+        ScriptedTexture->ClearColor = FLinearColor::Transparent;
 
-    ScriptedTexture->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-    ScriptedTexture->SizeX      = 256;
-    ScriptedTexture->SizeY      = 256;
-    ScriptedTexture->ClearColor = FLinearColor::Transparent;
-
-    ScriptedTexture->UpdateResource();
+        ScriptedTexture->UpdateResource();
+    }
 
     // Slate setup
     Renderer = new FWidgetRenderer(false, true); //bool bUseGammaCorrection, bool bInClearTarget

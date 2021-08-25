@@ -16,6 +16,8 @@ public class MyProject : ModuleRules
 			"GameplayAbilities",
 			"GameplayTasks",
 			"GameplayCameras",
+			"RenderCore",
+			"OnlineSubsystem", "OnlineSubsystemSteam"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[] {

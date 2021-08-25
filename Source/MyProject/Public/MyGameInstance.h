@@ -19,6 +19,8 @@ public:
 
 	UMyGameInstance();
 
+	virtual void Init() override;
+
 	UPROPERTY(BlueprintReadWrite)
 	USettingsSave* SettingsSave;
 

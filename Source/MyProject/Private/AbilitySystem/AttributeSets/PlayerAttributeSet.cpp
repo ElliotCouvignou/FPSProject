@@ -10,6 +10,7 @@
 #include "Actors/FPSWeapon.h"
 #include "MyProjectGameMode.h"
 #include "FPSPlayerState.h"
+#include "GameFramework/CharacterMovementComponent.h"
 //#include "Player/GSPlayerController.h"
 
 
@@ -32,11 +33,19 @@ void UPlayerAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 	{
 		AdjustAttributeForMaxChange(Health, MaxHealth, NewValue, GetHealthAttribute());
 	}
+	if (Attribute.AttributeName == GetMoveSpeedAttribute().AttributeName) {
+		UCharacterMovementComponent* CMC = Cast<UCharacterMovementComponent>(GetActorInfo()->MovementComponent);
+		if (CMC)
+		{
+			CMC->MaxWalkSpeed = NewValue;
+		}
+	}
 	else if (Attribute == GetMoveSpeedAttribute())
 	{
 		// Cannot slow less than 150 units/s and cannot boost more than 1000 units/s
 		NewValue = FMath::Clamp<float>(NewValue, 150, 1000);
 	}
+	
 }
 
 void UPlayerAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)

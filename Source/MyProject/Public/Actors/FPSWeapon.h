@@ -40,6 +40,15 @@ struct FFPSRecoilValue
 	}
 };
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	AssaultRifle		UMETA(DisplayName = "AssaultRifle"),
+	SniperRifle			UMETA(DisplayName = "SniperRifle"),
+	Shotgun				UMETA(DisplayName = "Shotgun"),
+};
+
+
 
 
 // USTRUCT(BlueprintType)
@@ -79,6 +88,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "FPSWeapon|Details")
 	FString WeaponName = "NoWeaponName";
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
+	EWeaponType WeaponType;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Details")
 	FGameplayTagContainer RestrictedPickupTags;
@@ -130,6 +142,12 @@ public:
 	/* If false, no tooltip will be generated when hovering this ability */
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|ADS")
 	float ADSTime = 0.1f;
+
+	/* multiplier of player's current FOV */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|ADS")
+	float ADSFOVCoeff = 55/90.f;
+
+
 	
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Recoil")
 	FFPSRecoilValue LocationRecoil;

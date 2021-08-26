@@ -9,6 +9,8 @@
 #include "UI/RenderTargetWidget.h"
 
 
+#define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
+
 // Constructor
 URenderTargetWidgetComponent::URenderTargetWidgetComponent(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -26,6 +28,7 @@ void URenderTargetWidgetComponent::BeginPlay()
         SlateWindow = SNew(SVirtualWindow).Size( FVector2D(256.0,256.0) );
         SlateGrid   = MakeShareable( new FHittestGrid() );
     }
+    Init();
 
     check( SlateWindow.IsValid() );
 }
@@ -114,16 +117,22 @@ void URenderTargetWidgetComponent::Render( float DeltaTime )
     // by:
     //    *SlateGrid.Get()
     // if you compile with UE4 4.25
-    Renderer->DrawWindow(
-        ScriptedTexture->GameThread_GetRenderTargetResource(),  // FRenderTarget* RenderTarget
-        *SlateGrid.Get(),                                // TSharedRef<FHittestGrid> HitTestGrid
-        SlateWindow.ToSharedRef(),                              // TSharedRef<SWindow> Window
-        SlateGeometry,                                          // FGeometry WindowGeometry
-        SlateGeometry.GetLayoutBoundingRect(),                  // FSlateRect WindowClipRect
-        DeltaTime,                                              // float DeltaTime
-        false                                                   // bool bDeferRenderTargetUpdate
-    );
-
+    if(SlateGrid.IsValid())
+    {
+        Renderer->DrawWindow(
+            ScriptedTexture->GameThread_GetRenderTargetResource(),  // FRenderTarget* RenderTarget
+            *SlateGrid.Get(),                                // TSharedRef<FHittestGrid> HitTestGrid
+            SlateWindow.ToSharedRef(),                              // TSharedRef<SWindow> Window
+            SlateGeometry,                                          // FGeometry WindowGeometry
+            SlateGeometry.GetLayoutBoundingRect(),                  // FSlateRect WindowClipRect
+            DeltaTime,                                              // float DeltaTime
+            false                                                   // bool bDeferRenderTargetUpdate
+        );
+    }
+    else
+    {
+        print(FString("Invalid slategrid"));
+    }
     // Generate the MipMaps if needed
     // ScriptedTexture->UpdateResourceImmediate( false );
 }

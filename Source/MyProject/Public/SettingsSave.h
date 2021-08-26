@@ -19,7 +19,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
 	float FOV = 90.f;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	float AssaultWeaponFOVMultiplier = 1.f;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	float SniperWeaponFOVMultiplier = 1.f;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Controls")
 	float MouseSensitivity = 1.0f;

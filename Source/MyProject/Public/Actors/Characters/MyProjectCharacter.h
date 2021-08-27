@@ -215,6 +215,12 @@ protected:
 	FTimerDelegate DeathTimerDel;
 	FTimerHandle DeathTimerHandle;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Essential|Cameras")
+	TSubclassOf<UCameraComponent> FPSCameraActorClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Essential|Cameras")
+	TSubclassOf<UCameraComponent> TPSCameraActorClass;
+
 	/* attribute set to be dynamically set on equipped gun's attribute set */
 	UPROPERTY()
 	class UWeaponAttributeSet* WeaponAmmoAttributeSet;

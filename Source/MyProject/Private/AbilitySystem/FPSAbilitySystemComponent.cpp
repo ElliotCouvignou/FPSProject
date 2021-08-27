@@ -26,6 +26,14 @@ UFPSAbilitySystemComponent* UFPSAbilitySystemComponent::GetAbilitySystemComponen
 	return Cast<UFPSAbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Actor, LookForComponent));
 }
 
+void UFPSAbilitySystemComponent::K2_CancelAbilityByClass(TSubclassOf<UGameplayAbility> AbilityClass)
+{
+	FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromClass(AbilityClass);
+	if(AbilitySpec)
+		CancelAbilitySpec(*AbilitySpec, AbilitySpec->Ability);
+
+}
+
 bool UFPSAbilitySystemComponent::BatchRPCTryActivateAbility(FGameplayAbilitySpecHandle InAbilityHandle,
                                                             bool EndAbilityImmediately)
 {

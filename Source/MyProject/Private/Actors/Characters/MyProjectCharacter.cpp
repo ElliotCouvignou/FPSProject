@@ -102,25 +102,17 @@ AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectI
 	ThirdPersonCameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
-	if(TPSCameraActorClass)
-	{
+
 		ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
 		ThirdPersonCamera->SetupAttachment(ThirdPersonCameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 		ThirdPersonCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-	}
-	else
-	{
-		ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
-		ThirdPersonCamera->SetupAttachment(ThirdPersonCameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-		ThirdPersonCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-	}
 	
-	if(FPSCameraActorClass)
-	{
+	
+
 		FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(FName("FirstPersonCamera"));
 		FirstPersonCamera->SetupAttachment(RootComponent);
 		FirstPersonCamera->bUsePawnControlRotation = true;// Camera does not rotate relative to arm
-	}
+	
 	
 	FPSMesh = CreateDefaultSubobject<USkeletalMeshComponent>(FName("FPSMesh"));
 	FPSMesh->SetupAttachment(FirstPersonCamera);

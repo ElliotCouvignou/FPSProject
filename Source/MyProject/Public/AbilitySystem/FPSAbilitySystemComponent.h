@@ -77,6 +77,9 @@ public:
 	// Version of function in AbilitySystemGlobals that returns correct type
 	static UFPSAbilitySystemComponent* GetAbilitySystemComponentFromActor(const AActor* Actor, bool LookForComponent = false);
 
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	void K2_CancelAbilityByClass(TSubclassOf<UGameplayAbility> AbilityClass);
+
 
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	virtual bool BatchRPCTryActivateAbility(FGameplayAbilitySpecHandle InAbilityHandle, bool EndAbilityImmediately);

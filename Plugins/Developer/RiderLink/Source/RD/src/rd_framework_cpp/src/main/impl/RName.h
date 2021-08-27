@@ -27,7 +27,7 @@ public:
 
 	RName(const RName& other) = default;
 
-	RName(RName&& other) noexcept = default; 
+	RName(RName&& other) noexcept = default;
 
 	RName& operator=(const RName& other) = default;
 

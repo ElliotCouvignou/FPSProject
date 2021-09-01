@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
 #define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
 
 
@@ -97,6 +98,20 @@ void AODMGrapple::BeginPlay()
 }
 
 
+FVector AODMGrapple::Test_GetClientInputVector()
+{
+	float F = Character->GetInputAxisValue(FName("MoveForward"));
+	
+	APlayerController* PC = Character->GetController<APlayerController>();
+	if(PC)
+	{
+		F = PC->GetInputKeyTimeDown(FKey(FName("MoveForward")));
+	}
+	
+
+	return FVector(0.f, 0.f, F);
+}
+
 void AODMGrapple::OnGrappleHeadOverlap()
 {
 	// TODO: play audio hhere?
@@ -115,8 +130,6 @@ void AODMGrapple::Tick(float DeltaTime)
 
 	const FVector Dist = (GetActorLocation() - GetOwner()->GetActorLocation()/*ODMComponent->GetSocketLocation(FName("GrappleSocket"))*/);
 
-
-
 	if(Cable)
 	{
 		Cable->CableLength = Dist.Size();
@@ -131,7 +144,12 @@ void AODMGrapple::Tick(float DeltaTime)
 		float PlayerSpringInfluence = 0.f;
 		
 		// Affect pullstrength through control direction (only when wanting to move)
-		FVector InputVector = Character->GetLastMovementInputVector();
+		// TODO: get player input vector, currently not replicated cause risky so im deriving from acceleration, not the best
+		FVector InputVector = Character->GetCharacterMovement()->GetCurrentAcceleration();//Character->GetPendingMovementInputVector();
+		InputVector.Z = 0.f;
+		InputVector.Normalize();
+		
+		print(FString("InputVector: " + InputVector.ToString()));
 		if(InputVector.Size() > 0.f)
 		{
 			const FVector ControlRot = Character->GetControlRotation().Vector();

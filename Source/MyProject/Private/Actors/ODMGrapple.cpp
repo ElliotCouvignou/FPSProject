@@ -149,7 +149,6 @@ void AODMGrapple::Tick(float DeltaTime)
 		InputVector.Z = 0.f;
 		InputVector.Normalize();
 		
-		print(FString("InputVector: " + InputVector.ToString()));
 		if(InputVector.Size() > 0.f)
 		{
 			const FVector ControlRot = Character->GetControlRotation().Vector();

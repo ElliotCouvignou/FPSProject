@@ -61,7 +61,6 @@ AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectI
 
 	AbilitySystemComponent = CreateDefaultSubobject<UFPSAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 	
 

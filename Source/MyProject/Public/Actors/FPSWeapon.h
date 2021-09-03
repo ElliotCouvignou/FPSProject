@@ -292,6 +292,12 @@ public:
 	// Getter for SphereTraceTargetActor. Spawns it if it doesn't exist yet.
 	UFUNCTION(BlueprintCallable, BlueprintPure , Category = "FPSWeapon|Targeting")
 	AGameplayAbilityTargetActor* GetSphereTraceTargetActor() { return SphereTraceTargetActor; }
+
+	/* when true, we are fully in ads so tell client to do some vfx for visibility */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Ability")
+	void OnADSTargetFOVReachedOrLeave(bool IsReached);
+	virtual void OnADSTargetFOVReachedOrLeave_Implementation(bool IsReached);
+	
 	
 protected:
 

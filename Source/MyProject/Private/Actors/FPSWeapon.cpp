@@ -373,6 +373,10 @@ AMyGTGA_LineTrace* AFPSWeapon::GetLineTraceTargetActor()
 	return LineTraceTargetActor;
 }
 
+void AFPSWeapon::OnADSTargetFOVReachedOrLeave_Implementation(bool IsReached)
+{
+}
+
 // Called when the game starts or when spawned
 void AFPSWeapon::BeginPlay()
 {

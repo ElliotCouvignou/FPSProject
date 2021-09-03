@@ -79,7 +79,6 @@ protected:
 	UPROPERTY()
 	bool DoGrapplePull = true;
 
-	FVector Test_GetClientInputVector();
 
 	UPROPERTY()
 	ACharacter* Character;

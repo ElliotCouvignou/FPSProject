@@ -97,21 +97,6 @@ void AODMGrapple::BeginPlay()
 	//GetWorldTimerManager().SetTimer(BeginPlayTimerHandle, this, &AODMGrapple::OnDelayedCableSegmentReduce, CableSegmentsDelay, false);
 }
 
-
-FVector AODMGrapple::Test_GetClientInputVector()
-{
-	float F = Character->GetInputAxisValue(FName("MoveForward"));
-	
-	APlayerController* PC = Character->GetController<APlayerController>();
-	if(PC)
-	{
-		F = PC->GetInputKeyTimeDown(FKey(FName("MoveForward")));
-	}
-	
-
-	return FVector(0.f, 0.f, F);
-}
-
 void AODMGrapple::OnGrappleHeadOverlap()
 {
 	// TODO: play audio hhere?

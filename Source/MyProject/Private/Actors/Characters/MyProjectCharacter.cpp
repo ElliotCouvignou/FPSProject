@@ -598,7 +598,6 @@ void AMyProjectCharacter::SetCurrentWeapon(AFPSWeapon* NewWeapon, AFPSWeapon* La
 		UAnimMontage* Equip1PMontage = CurrentWeapon->GetEquip1PMontage();
 		if (Equip1PMontage && GetFirstPersonMesh())
 		{
-			print(FString("Play valid EquipMontage"));
 			GetFirstPersonMesh()->GetAnimInstance()->Montage_Play(Equip1PMontage);
 		}
 

@@ -325,13 +325,13 @@ protected:
 	AGameplayAbilityTargetActor* SphereTraceTargetActor;
 
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 	class UCapsuleComponent* CollisionComp;
 
-	UPROPERTY(VisibleAnywhere, Category = "FPSWeapon|Details")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FPSWeapon|Details")
 	USkeletalMeshComponent* WeaponMesh1P;
 
-	UPROPERTY(VisibleAnywhere, Category = "FPSWeapon|Details")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FPSWeapon|Details")
 	USkeletalMeshComponent* WeaponMesh3P;
 
 	/* Relative Desired Offset from Player Camera we want to hold this weapon at */ 

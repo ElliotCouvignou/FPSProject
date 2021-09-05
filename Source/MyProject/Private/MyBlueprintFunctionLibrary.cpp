@@ -4,6 +4,7 @@
 #include "MyBlueprintFunctionLibrary.h"
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
 #include "AbilitySystem/MyGameplayEffectTypes.h"
+#include "Materials/MaterialFunctionInstance.h"
 
 #define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
 
@@ -82,6 +83,7 @@ bool UMyBlueprintFunctionLibrary::IsAbilitySpecHandleValid(FGameplayAbilitySpecH
 {
 	return Handle.IsValid();
 }
+
 
 FRotator UMyBlueprintFunctionLibrary::RInterpToExact( const FRotator& Current, const FRotator& Target, float DeltaTime, float InterpSpeed, float Tolerance)
 {

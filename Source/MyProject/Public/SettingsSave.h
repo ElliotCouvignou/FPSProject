@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "Materials/MaterialFunctionInstance.h"
 #include "SettingsSave.generated.h"
 
 /**
@@ -19,6 +20,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
 	float FOV = 90.f;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	float WeaponAndHandsFOV = 90.f;
+	
 	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
 	float AssaultWeaponFOVMultiplier = 1.f;
 

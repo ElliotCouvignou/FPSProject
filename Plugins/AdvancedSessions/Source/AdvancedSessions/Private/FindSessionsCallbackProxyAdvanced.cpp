@@ -15,7 +15,7 @@ UFindSessionsCallbackProxyAdvanced::UFindSessionsCallbackProxyAdvanced(const FOb
 	bIsOnSecondSearch = false;
 }
 
-UFindSessionsCallbackProxyAdvanced* UFindSessionsCallbackProxyAdvanced::FindSessionsAdvanced(UObject* WorldContextObject, class APlayerController* PlayerController, int MaxResults, bool bUseLAN, EBPServerPresenceSearchType ServerTypeToSearch, const TArray<FSessionsSearchSetting> &Filters, bool bEmptyServersOnly, bool bNonEmptyServersOnly, bool bSecureServersOnly, int MinSlotsAvailable)
+UFindSessionsCallbackProxyAdvanced* UFindSessionsCallbackProxyAdvanced::FindSessionsAdvanced(UObject* WorldContextObject, class APlayerController* PlayerController, int MaxResults, bool bUseLAN, EBPServerPresenceSearchType ServerTypeToSearch, const TArray<FSessionsSearchSetting> &Filters, bool bEmptyServersOnly, bool bNonEmptyServersOnly, bool bSecureServersOnly, bool bSearchLobbies, int MinSlotsAvailable)
 {
 	UFindSessionsCallbackProxyAdvanced* Proxy = NewObject<UFindSessionsCallbackProxyAdvanced>();	
 	Proxy->PlayerControllerWeakPtr = PlayerController;
@@ -27,6 +27,7 @@ UFindSessionsCallbackProxyAdvanced* UFindSessionsCallbackProxyAdvanced::FindSess
 	Proxy->bEmptyServersOnly = bEmptyServersOnly,
 	Proxy->bNonEmptyServersOnly = bNonEmptyServersOnly;
 	Proxy->bSecureServersOnly = bSecureServersOnly;
+	Proxy->bSearchLobbies = bSearchLobbies;
 	Proxy->MinSlotsAvailable = MinSlotsAvailable;
 	return Proxy;
 }
@@ -55,7 +56,7 @@ void UFindSessionsCallbackProxyAdvanced::Activate()
 			// Create temp filter variable, because I had to re-define a blueprint version of this, it is required.
 			FOnlineSearchSettingsEx tem;
 
-			/*		// Search only for dedicated servers (value is true/false)
+					// Search only for dedicated servers (value is true/false)
 			#define SEARCH_DEDICATED_ONLY FName(TEXT("DEDICATEDONLY"))
 			// Search for empty servers only (value is true/false)
 			#define SEARCH_EMPTY_SERVERS_ONLY FName(TEXT("EMPTYONLY"))
@@ -72,7 +73,18 @@ void UFindSessionsCallbackProxyAdvanced::Activate()
 			// User ID to search for session of
 			#define SEARCH_USER FName(TEXT("SEARCHUSER"))
 			// Keywords to match in session search
-			#define SEARCH_KEYWORDS FName(TEXT("SEARCHKEYWORDS"))*/
+			#define SEARCH_KEYWORDS FName(TEXT("SEARCHKEYWORDS"))
+			/** Keywords to match in session search */
+			/** The matchmaking queue name to matchmake in, e.g. "TeamDeathmatch" (value is string) */
+			/** #define SEARCH_MATCHMAKING_QUEUE FName(TEXT("MATCHMAKINGQUEUE"))*/
+			/** If set, use the named Xbox Live hopper to find a session via matchmaking (value is a string) */
+			/** #define SEARCH_XBOX_LIVE_HOPPER_NAME FName(TEXT("LIVEHOPPERNAME"))*/
+			/** Which session template from the service configuration to use */
+			/** #define SEARCH_XBOX_LIVE_SESSION_TEMPLATE_NAME FName(TEXT("LIVESESSIONTEMPLATE"))*/
+			/** Selection method used to determine which match to join when multiple are returned (valid only on Switch) */
+			/** #define SEARCH_SWITCH_SELECTION_METHOD FName(TEXT("SWITCHSELECTIONMETHOD"))*/
+			/** Whether to use lobbies vs sessions */
+			#define SEARCH_LOBBIES FName(TEXT("LOBBYSEARCH"))
 
 			if (bEmptyServersOnly)
 				tem.Set(SEARCH_EMPTY_SERVERS_ONLY, true, EOnlineComparisonOp::Equals);
@@ -85,8 +97,6 @@ void UFindSessionsCallbackProxyAdvanced::Activate()
 
 			if (MinSlotsAvailable != 0)
 				tem.Set(SEARCH_MINSLOTSAVAILABLE, MinSlotsAvailable, EOnlineComparisonOp::GreaterThanEquals);
-
-
 
 			// Filter results
 			if (SearchSettings.Num() > 0)
@@ -104,6 +114,9 @@ void UFindSessionsCallbackProxyAdvanced::Activate()
 			case EBPServerPresenceSearchType::ClientServersOnly:
 			{
 				tem.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+				if (bSearchLobbies)
+					tem.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 			}
 			break;
 

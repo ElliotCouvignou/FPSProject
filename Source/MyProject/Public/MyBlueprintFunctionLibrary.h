@@ -40,6 +40,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability")
 	static bool IsAbilitySpecHandleValid(FGameplayAbilitySpecHandle Handle);
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Misc")
+	UWorld* BP_GetWorld() { return GetWorld(); }
 
 	/** Interpolate rotator from Current to Target. Scaled by distance to Target, so it has a strong start speed and ease out.
 	    This variant doesn't  jump to target on high framerates which is noticeable when this is every tick*/

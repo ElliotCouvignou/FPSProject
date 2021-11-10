@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/Tasks/AbilityTask.h"
+
 #include "WaitChangeFOV.generated.h"
 
 
@@ -26,6 +27,10 @@ class MYPROJECT_API UWaitChangeFOV : public UAbilityTask
 	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
 	static UWaitChangeFOV* WaitChangeFOV(UGameplayAbility* OwningAbility, FName TaskInstanceName, class UCameraComponent* CameraComponent, float TargetFOV, float Duration, UCurveFloat* OptionalInterpolationCurve);
 
+	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE", WorldContext="WorldContextObject"))
+	static UWaitChangeFOV* WaitChangeMaterialFOV(UObject* WorldContextObject, UGameplayAbility* OwningAbility, FName TaskInstanceName, float TargetFOV, float Duration, UCurveFloat* OptionalInterpolationCurve, class UMaterialParameterCollection* WeaponFOVMaterial);
+
+	
 	virtual void Activate() override;
 
 	// Tick function for this task, if bTickingTask == true
@@ -48,6 +53,10 @@ class MYPROJECT_API UWaitChangeFOV : public UAbilityTask
 
 	class UCameraComponent* CameraComponent;
 
+	class UMaterialParameterCollection* OptionalWeaponFOVMaterial;
+
+	UObject* WorldContenxt;
+	
 	UCurveFloat* LerpCurve;
 	
 };

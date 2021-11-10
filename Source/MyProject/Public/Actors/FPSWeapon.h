@@ -147,6 +147,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|ADS")
 	float ADSFOVCoeff = 55/90.f;
 
+	/* not a coefficient as snipers need a hardcoded value for making sure scope looks good */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|ADS")
+	float ADSWeaponFOV = 70.f;
 
 	
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "FPSWeapon|Recoil")

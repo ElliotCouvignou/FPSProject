@@ -39,4 +39,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void OnHealthMaxChanged(float NewValue);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnGasLeftChanged(float NewValue);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnGasRightChanged(float NewValue);
+
+
+	
 };

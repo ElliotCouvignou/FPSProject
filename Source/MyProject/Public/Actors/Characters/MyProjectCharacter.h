@@ -208,6 +208,13 @@ public:
 	virtual void FellOutOfWorld(const class UDamageType& dmgType) override;
 
 protected:
+
+	virtual void InitializeAttributeSet();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Essential|Abilities")
+	UDataTable* AttrDataTable;
+
+	
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	float RespawnDelay = 3.f;
 	
@@ -222,11 +229,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Essential|Abilities")
 	class UMyAbilitySetDataAsset* EssentialAbilities;
-
-	// Default attributes for a character for initializing on spawn/respawn.
-	// This is an instant GE that overrides the values for attributes that get reset on spawn/respawn.
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|Abilities")
-	TSubclassOf<class UGameplayEffect> DefaultAttributes;
 
 	// These effects are only applied one time on startup
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|Abilities")
@@ -328,7 +330,6 @@ protected:
 	// Initialize the Character's attributes. Must run on Server but we run it on Client too
 	// so that we don't have to wait. The Server's replication to the Client won't matter since
 	// the values should be the same.
-	virtual void InitializeAttributes();
 	
 	virtual void AddStartupEffects();
 	

@@ -58,6 +58,23 @@ public:
 	FGameplayAttributeData StaminaRegenRate;
 	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, StaminaRegenRate)
 
+
+	UPROPERTY(BlueprintReadOnly, Category = "Gas", ReplicatedUsing = OnRep_GasLeft)
+	FGameplayAttributeData GasLeft;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, GasLeft)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Gas", ReplicatedUsing = OnRep_GasRight)
+	FGameplayAttributeData GasRight;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, GasRight)
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Gas", ReplicatedUsing = OnRep_MaxGas)
+	FGameplayAttributeData MaxGas;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, MaxGas)
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Gas", ReplicatedUsing = OnRep_GasRegenRate)
+	FGameplayAttributeData GasRegenRate;
+	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, GasRegenRate)
+
 	// Damage is a meta attribute used by the DamageExecution to calculate final damage, which then turns into -Health
 	// Temporary value that only exists on the Server. Not replicated.
 	UPROPERTY(BlueprintReadOnly, Category = "Damage")
@@ -78,6 +95,7 @@ public:
 	FGameplayAttributeData XP;
 	ATTRIBUTE_ACCESSORS(UPlayerAttributeSet, XP)
 
+	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -111,6 +129,18 @@ protected:
 	UFUNCTION()
 	virtual void OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate);
 
+	UFUNCTION()
+	virtual void OnRep_GasLeft(const FGameplayAttributeData& OldGasLeft);
+
+	UFUNCTION()
+	virtual void OnRep_GasRight(const FGameplayAttributeData& OldGasRight);
+
+	UFUNCTION()
+	virtual void OnRep_MaxGas(const FGameplayAttributeData& OldMaxGas);
+	
+	UFUNCTION()
+	virtual void OnRep_GasRegenRate(const FGameplayAttributeData& OldGasRegenRate);
+	
 	UFUNCTION()
 	virtual void OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed);
 

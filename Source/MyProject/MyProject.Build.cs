@@ -24,7 +24,8 @@ public class MyProject : ModuleRules
 				"CableComponent",
 				"GameplayAbilities",
 				"GameplayTags",
-				"GameplayTasks"
+				"GameplayTasks",
+				"OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemNull"
 			}
 		);
 	}

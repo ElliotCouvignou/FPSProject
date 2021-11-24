@@ -66,6 +66,8 @@ protected:
 
 	// Attribute changed delegate handles
 	FDelegateHandle HealthChangedDelegateHandle;
+	FDelegateHandle GasLeftChangedDelegateHandle;
+	FDelegateHandle GasRightChangedDelegateHandle;
 
 	UFUNCTION()
 	void OnRep_TeamIndex();
@@ -83,4 +85,7 @@ protected:
 
 	// Attribute changed callbacks
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
+
+	virtual void GasLeftChanged(const FOnAttributeChangeData& Data);
+	virtual void GasRightChanged(const FOnAttributeChangeData& Data);
 };

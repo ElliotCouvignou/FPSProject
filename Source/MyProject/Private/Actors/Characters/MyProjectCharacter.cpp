@@ -508,6 +508,14 @@ void AMyProjectCharacter::FellOutOfWorld(const UDamageType& dmgType)
 	}
 }
 
+void AMyProjectCharacter::InitializeAttributeSet()
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitStats(UPlayerAttributeSet::StaticClass(), AttrDataTable);
+	}
+}
+
 void AMyProjectCharacter::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
@@ -655,29 +663,7 @@ void AMyProjectCharacter::CurrentWeaponSecondaryClipAmmoChanged(int32 OldSeconda
 	//}
 }
 
-void AMyProjectCharacter::InitializeAttributes()
-{
-	if (!IsValid(AbilitySystemComponent))
-{
-	return;
-}
 
-	if (!DefaultAttributes)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s() Missing DefaultAttributes for %s. Please fill in the character's Blueprint."), *FString(__FUNCTION__), *GetName());
-		return;
-	}
-
-	// Can run on Server and Client
-	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-	EffectContext.AddSourceObject(this);
-
-	FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributes, GetCharacterLevel(), EffectContext);
-	if (NewHandle.IsValid())
-	{
-		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
-	}
-}
 
 void AMyProjectCharacter::AddStartupEffects()
 {
@@ -726,6 +712,8 @@ void AMyProjectCharacter::OnRep_Controller()
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
+	
+	
 	BindASCInput();
 
 	
@@ -749,7 +737,7 @@ void AMyProjectCharacter::PossessedBy(AController* NewController)
 
 		PS->BindDelegates();
 		
-		InitializeAttributes();
+		InitializeAttributeSet();
 
 		AddStartupEffects();
 

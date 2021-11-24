@@ -3,7 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "OnlineSubsystem.h"
+#include "OnlineSessionSettings.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Engine/GameInstance.h"
+
 #include "SettingsSave.h"
 #include "MyGameInstance.generated.h"
 
@@ -19,8 +24,7 @@ public:
 
 	UMyGameInstance();
 
-	virtual void Init() override;
-
+	
 	UPROPERTY(BlueprintReadWrite)
 	USettingsSave* SettingsSave;
 
@@ -33,6 +37,22 @@ public:
 
 protected:
 
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+
+	IOnlineSessionPtr SessionInterface;
+
+	virtual void Init() override;
+
+	virtual void OnCreateSessionComplete(FName SessionName, bool Succeeded);
+	virtual void OnFindSessionComplete(bool Succeeded);
+	virtual void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+
+	UFUNCTION(BlueprintCallable)
+	void CreateServer();
+
+	UFUNCTION(BlueprintCallable)
+	void JoinServer();
+	
 	UPROPERTY()
 	FString SettingsSaveSlot = "SettingsSlaveSlot";
 };

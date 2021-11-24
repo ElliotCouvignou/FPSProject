@@ -23,6 +23,25 @@ UPlayerAttributeSet::UPlayerAttributeSet()
 	HeadShotTag = FGameplayTag::RequestGameplayTag(FName("Effect.Damage.HeadShot"));
 }
 
+void UPlayerAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
+{
+	Super::PreAttributeBaseChange(Attribute, NewValue);
+
+	if (Attribute == GetMoveSpeedAttribute())
+	{
+		// Cannot slow less than 150 units/s and cannot boost more than 1000 units/s
+		NewValue = FMath::Clamp<float>(NewValue, 150, 1000);
+	}
+	else if (Attribute == GetGasLeftAttribute() || Attribute == GetGasRightAttribute()) // GetMaxGasAttribute comes from the Macros defined at the top of the header
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxGas());
+	}
+	else if (Attribute == GetHealthAttribute()) // GetMaxGasAttribute comes from the Macros defined at the top of the header
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxHealth());
+	}
+}
+
 void UPlayerAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	// This is called whenever attributes change, so for max health/mana we want to scale the current totals to match
@@ -33,7 +52,8 @@ void UPlayerAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 	{
 		AdjustAttributeForMaxChange(Health, MaxHealth, NewValue, GetHealthAttribute());
 	}
-	if (Attribute.AttributeName == GetMoveSpeedAttribute().AttributeName) {
+	
+	else if (Attribute.AttributeName == GetMoveSpeedAttribute().AttributeName) {
 		UCharacterMovementComponent* CMC = Cast<UCharacterMovementComponent>(GetActorInfo()->MovementComponent);
 		if (CMC)
 		{
@@ -45,6 +65,15 @@ void UPlayerAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 		// Cannot slow less than 150 units/s and cannot boost more than 1000 units/s
 		NewValue = FMath::Clamp<float>(NewValue, 150, 1000);
 	}
+	else if (Attribute == GetGasLeftAttribute() || Attribute == GetGasRightAttribute()) // GetMaxGasAttribute comes from the Macros defined at the top of the header
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxGas());
+	}
+	else if (Attribute == GetHealthAttribute()) // GetMaxGasAttribute comes from the Macros defined at the top of the header
+	{
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxHealth());
+	}
+	
 	
 }
 
@@ -283,6 +312,10 @@ void UPlayerAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, Stamina, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, MaxStamina, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, StaminaRegenRate, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, GasLeft, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, GasRight, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, MaxGas, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, GasRegenRate, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, MoveSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, CharacterLevel, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPlayerAttributeSet, XP, COND_None, REPNOTIFY_Always);
@@ -330,6 +363,26 @@ void UPlayerAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& OldMaxS
 void UPlayerAttributeSet::OnRep_StaminaRegenRate(const FGameplayAttributeData& OldStaminaRegenRate)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, StaminaRegenRate, OldStaminaRegenRate);
+}
+
+void UPlayerAttributeSet::OnRep_GasLeft(const FGameplayAttributeData& OldGasLeft)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, GasLeft, OldGasLeft);
+}
+
+void UPlayerAttributeSet::OnRep_GasRight(const FGameplayAttributeData& OldGasRight)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, GasRight, OldGasRight);
+}
+
+void UPlayerAttributeSet::OnRep_MaxGas(const FGameplayAttributeData& OldMaxGas)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, MaxGas, OldMaxGas);
+}
+
+void UPlayerAttributeSet::OnRep_GasRegenRate(const FGameplayAttributeData& OldGasRegenRate)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPlayerAttributeSet, GasRegenRate, OldGasRegenRate);
 }
 
 void UPlayerAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed)

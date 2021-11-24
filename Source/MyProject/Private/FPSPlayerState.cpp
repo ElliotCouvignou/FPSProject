@@ -79,7 +79,8 @@ void AFPSPlayerState::BindDelegates()
 	{
 		// Attribute change callbacks
 		HealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetHealthAttribute()).AddUObject(this, &AFPSPlayerState::HealthChanged);
-
+		GasLeftChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetGasLeftAttribute()).AddUObject(this, &AFPSPlayerState::GasLeftChanged);
+		GasRightChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(PlayerAttributeSet->GetGasRightAttribute()).AddUObject(this, &AFPSPlayerState::GasRightChanged);
 	}
 }
 
@@ -126,4 +127,22 @@ void AFPSPlayerState::HealthChanged(const FOnAttributeChangeData& Data)
 		PC->MainGameplayWidget->OnHealthChanged(Data.NewValue);
 	}
 	// TODO: UI changes here
+}
+
+void AFPSPlayerState::GasLeftChanged(const FOnAttributeChangeData& Data)
+{
+	AMyPlayerController* PC = GetPawn()->GetController<AMyPlayerController>();
+	if(PC && PC->MainGameplayWidget)
+	{
+		PC->MainGameplayWidget->OnGasLeftChanged(Data.NewValue);
+	}
+}
+
+void AFPSPlayerState::GasRightChanged(const FOnAttributeChangeData& Data)
+{
+	AMyPlayerController* PC = GetPawn()->GetController<AMyPlayerController>();
+	if(PC && PC->MainGameplayWidget)
+	{
+		PC->MainGameplayWidget->OnGasRightChanged(Data.NewValue);
+	}
 }

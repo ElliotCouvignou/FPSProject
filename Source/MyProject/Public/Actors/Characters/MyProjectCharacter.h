@@ -58,8 +58,6 @@ class AMyProjectCharacter : public ACharacter, public IAbilitySystemInterface
 	class UWeaponAttributeSet* AmmoAttributeSet;
 
 	/** this is gonna be shitty capsule */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> BodyMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> FPSMesh;

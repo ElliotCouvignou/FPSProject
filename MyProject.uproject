@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.0",
+	"EngineAssociation": "{2623FD95-4940-74B8-9542-B7A4722C1FD3}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -75,6 +75,14 @@
 		},
 		{
 			"Name": "AudioModulation",
+			"Enabled": true
+		},
+		{
+			"Name": "AdvancedSteamSessions",
+			"Enabled": true
+		},
+		{
+			"Name": "AdvancedSessions",
 			"Enabled": true
 		}
 	]

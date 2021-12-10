@@ -120,7 +120,7 @@ void AODMGrapple::Tick(float DeltaTime)
 		Cable->CableLength = Dist.Size();
 	}
 		
-	if(DoGrapplePull && HasAuthority() && !DisableGrapplePull)
+	if(DoGrapplePull  && !DisableGrapplePull)
 	{
 		// print(FString("GrappleSocket Locaiton: " + ODMComponent->GetSocketLocation(FName("GrappleSocket")).ToString()));
 		// print(FString("OwnerActor Locaiton: " + GetOwner()->GetActorLocation().ToString()));
@@ -176,7 +176,7 @@ void AODMGrapple::Tick(float DeltaTime)
 			SpringForce +=  InputVector.ProjectOnTo(Force) * SpringForce.Size() * PlayerSpringInfluence;
 			
 			Character->GetCharacterMovement()->Velocity += SpringForce;
-
+		
 			//DrawDebugLine(GetWorld(), Character->GetActorLocation(), Character->GetActorLocation() + (SpringForce *200.f), FColor::Orange, false, 5.f, 0.f, 1.f);
 		}
 

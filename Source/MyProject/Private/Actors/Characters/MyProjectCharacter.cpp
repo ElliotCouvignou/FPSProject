@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystemGlobals.h"
 
 #include "Actors/FPSWeapon.h"
 #include "AbilitySystem/MyAbilitySetDataAsset.h"
@@ -78,25 +79,9 @@ AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectI
 	GetCharacterMovement()->AirControl = 0.2f;
 
 
-	BodyMesh = CreateOptionalDefaultSubobject<UStaticMeshComponent>("BodyMesh");
-	if(BodyMesh)
-	{
-		BodyMesh->AlwaysLoadOnClient = true;
-		BodyMesh->AlwaysLoadOnServer = true;
-		BodyMesh->bOwnerNoSee = false;
-		BodyMesh->bCastDynamicShadow = true;
-		BodyMesh->bAffectDynamicIndirectLighting = true;
-		BodyMesh->PrimaryComponentTick.TickGroup = TG_PrePhysics;
-		BodyMesh->SetupAttachment(GetCapsuleComponent());
-		static FName MeshCollisionProfileName(TEXT("CharacterMesh"));
-		BodyMesh->SetCollisionProfileName(MeshCollisionProfileName);
-		BodyMesh->SetGenerateOverlapEvents(false);
-		BodyMesh->SetCanEverAffectNavigation(false);
-	}
-	
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	ThirdPersonCameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonCameraBoom"));
-	ThirdPersonCameraBoom->SetupAttachment(GetMesh());
+	ThirdPersonCameraBoom->SetupAttachment(GetMesh(), FName("Root"));
 	ThirdPersonCameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	ThirdPersonCameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
@@ -109,7 +94,7 @@ AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectI
 	
 
 		FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(FName("FirstPersonCamera"));
-		FirstPersonCamera->SetupAttachment(RootComponent);
+		FirstPersonCamera->SetupAttachment(GetMesh(), FName("Root"));
 		FirstPersonCamera->bUsePawnControlRotation = true;// Camera does not rotate relative to arm
 	
 	
@@ -672,6 +657,20 @@ void AMyProjectCharacter::AddStartupEffects()
 		return;
 	}
 
+	// if(AbilitySystemComponent->AbilityActorInfo)
+	// {
+	// 	FGameplayEffectContextHandle Context = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	//
+	// 	Context.AddInstigator(this, this);
+	//
+	// 	// Cache off his AbilitySystemComponent.
+	// 	//InstigatorAbilitySystemComponent = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Instigator.Get());
+	// 	// By default use the owner and avatar as the instigator and causer
+	// 	//Context.AddInstigator(AbilitySystemComponent->AbilityActorInfo->OwnerActor.Get(), AbilitySystemComponent->AbilityActorInfo->AvatarActor.Get());
+	//
+	// }
+	
+	
 	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 	EffectContext.AddSourceObject(this);
 

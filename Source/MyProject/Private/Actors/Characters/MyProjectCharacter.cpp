@@ -541,8 +541,9 @@ void AMyProjectCharacter::SetCurrentWeapon(AFPSWeapon* NewWeapon, AFPSWeapon* La
 	// Cancel active weapon abilities
 	if (AbilitySystemComponent)
 	{
-		FGameplayTagContainer AbilityTagsToCancel = FGameplayTagContainer(WeaponAbilityTag);
-		AbilitySystemComponent->CancelAbilities(&AbilityTagsToCancel);
+		// TODO: cancel some abilities but not the reload
+		//FGameplayTagContainer AbilityTagsToCancel = FGameplayTagContainer(WeaponAbilityTag);
+		//AbilitySystemComponent->CancelAbilities(&AbilityTagsToCancel);
 	}
 
 	UnEquipWeapon(LastWeapon);

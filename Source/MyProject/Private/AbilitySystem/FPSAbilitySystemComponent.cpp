@@ -113,7 +113,7 @@ float UFPSAbilitySystemComponent::PlayMontageForMesh(UGameplayAbility* InAnimati
 
 			AnimMontageInfo.LocalMontageInfo.AnimMontage = NewAnimMontage;
 			AnimMontageInfo.LocalMontageInfo.AnimatingAbility = InAnimatingAbility;
-			AnimMontageInfo.LocalMontageInfo.PlayInstanceId = !AnimMontageInfo.LocalMontageInfo.PlayInstanceId;
+			//AnimMontageInfo.LocalMontageInfo.PlayInstanceId = !AnimMontageInfo.LocalMontageInfo.PlayInstanceId;
 			
 			if (InAbility)
 			{
@@ -134,7 +134,7 @@ float UFPSAbilitySystemComponent::PlayMontageForMesh(UGameplayAbility* InAnimati
 					// Those are static parameters, they are only set when the montage is played. They are not changed after that.
 					FGameplayAbilityRepAnimMontageForMesh& AbilityRepMontageInfo = GetGameplayAbilityRepAnimMontageForMesh(InMesh);
 					AbilityRepMontageInfo.RepMontageInfo.AnimMontage = NewAnimMontage;
-					AbilityRepMontageInfo.RepMontageInfo.PlayInstanceId = !bool(AbilityRepMontageInfo.RepMontageInfo.PlayInstanceId);
+					//AbilityRepMontageInfo.RepMontageInfo.PlayInstanceId = !bool(AbilityRepMontageInfo.RepMontageInfo.PlayInstanceId);
 
 					// Update parameters that change during Montage life time.
 					AnimMontage_UpdateReplicatedDataForMesh(InMesh);
@@ -414,8 +414,7 @@ void UFPSAbilitySystemComponent::OnRep_ReplicatedAnimMontageForMesh()
 					NewRepMontageInfoForMesh.RepMontageInfo.Position,
 					NewRepMontageInfoForMesh.RepMontageInfo.BlendTime,
 					NewRepMontageInfoForMesh.RepMontageInfo.NextSectionID,
-					NewRepMontageInfoForMesh.RepMontageInfo.IsStopped,
-					NewRepMontageInfoForMesh.RepMontageInfo.PlayInstanceId);
+					NewRepMontageInfoForMesh.RepMontageInfo.IsStopped);
 				ABILITY_LOG(Warning, TEXT("\tLocalAnimMontageInfo.AnimMontage: %s\n\tPosition: %f"),
 					*GetNameSafe(AnimMontageInfo.LocalMontageInfo.AnimMontage), AnimInstance->Montage_GetPosition(AnimMontageInfo.LocalMontageInfo.AnimMontage));
 			}
@@ -423,10 +422,10 @@ void UFPSAbilitySystemComponent::OnRep_ReplicatedAnimMontageForMesh()
 			if (NewRepMontageInfoForMesh.RepMontageInfo.AnimMontage)
 			{
 				// New Montage to play
-				const bool ReplicatedPlayBit = bool(NewRepMontageInfoForMesh.RepMontageInfo.PlayInstanceId);
-				if ((AnimMontageInfo.LocalMontageInfo.AnimMontage != NewRepMontageInfoForMesh.RepMontageInfo.AnimMontage) || (AnimMontageInfo.LocalMontageInfo.PlayInstanceId != static_cast<uint8>(ReplicatedPlayBit)))
+				//const bool ReplicatedPlayBit = bool(NewRepMontageInfoForMesh.RepMontageInfo.PlayInstanceId);
+				if ((AnimMontageInfo.LocalMontageInfo.AnimMontage != NewRepMontageInfoForMesh.RepMontageInfo.AnimMontage))
 				{
-					AnimMontageInfo.LocalMontageInfo.PlayInstanceId = ReplicatedPlayBit;
+				//	AnimMontageInfo.LocalMontageInfo.PlayInstanceId = ReplicatedPlayBit;
 					PlayMontageSimulatedForMesh(NewRepMontageInfoForMesh.Mesh, NewRepMontageInfoForMesh.RepMontageInfo.AnimMontage, NewRepMontageInfoForMesh.RepMontageInfo.PlayRate);
 				}
 

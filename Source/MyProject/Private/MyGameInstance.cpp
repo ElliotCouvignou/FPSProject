@@ -209,7 +209,7 @@ void UMyGameInstance::CreateServer()
 		SessionSettings.NumPublicConnections = 2;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
-		SessionSettings.bUseLobbiesIfAvailable = true;
+		//SessionSettings.bUseLobbiesIfAvailable = true;
 		SessionSettings.Set<FString>(SERVER_NAME_SETTINGS_KEY,FString("TESTSERVERNAMELMAO"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 		SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);

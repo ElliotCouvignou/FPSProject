@@ -120,7 +120,7 @@ void AODMGrapple::Tick(float DeltaTime)
 		Cable->CableLength = Dist.Size();
 	}
 		
-	if(DoGrapplePull && HasAuthority() && !DisableGrapplePull)
+	if(DoGrapplePull /*&& HasAuthority()*/ && !DisableGrapplePull)
 	{
 		// print(FString("GrappleSocket Locaiton: " + ODMComponent->GetSocketLocation(FName("GrappleSocket")).ToString()));
 		// print(FString("OwnerActor Locaiton: " + GetOwner()->GetActorLocation().ToString()));

@@ -31,6 +31,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	bool DisableGrapplePull = false; 
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+	bool IsLeftGrapple;
+	
 	/* Current used as MetaSound Parameter to affect pulling sound */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float SpeedInPullDirection;
@@ -92,7 +95,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
+	virtual void Destroyed() override;
 	
 	
 public:	

@@ -18,6 +18,7 @@
 #include "AbilitySystem/FPSAbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSets/PlayerAttributeSet.h"
 #include "AbilitySystem/AttributeSets/WeaponAttributeSet.h"
+#include "FPSMovementComponent.h"
 #include "MyProjectGameMode.h"
 #include "MyPlayerController.h"
 #include "MyProject.h"
@@ -28,7 +29,8 @@
 //////////////////////////////////////////////////////////////////////////
 // AMyProjectCharacter
 
-AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AMyProjectCharacter::AMyProjectCharacter(const class FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UFPSMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;

@@ -45,15 +45,21 @@ public:
 	void StopGrappleLeft();
 	UFUNCTION(BlueprintCallable, Category = "Client")
 	void StopGrappleRight();
+	UFUNCTION(Category = "Client")
+	void UpdateGrappleMovement(float DeltaTime, bool IsLeft);
 	UFUNCTION(BlueprintCallable, Category = "Client")
-	void UpdateGrappleMoement(float DeltaTime, bool IsLeft);
+	void DoPowerSlide();
 	UFUNCTION(BlueprintCallable, Category = "Client")
-	void UpdatePowerSlide(float DeltaTime);
+	void StopPowerSlide();
+	UFUNCTION(Category = "Client")
+	void InitiatePowerSlide(float DeltaTime);
+	UFUNCTION()
+	void UpdatePowerSlide();
 	// Pullstrength += SPringFactor/(offsetdist)
 	
 	/* Current used as MetaSound Parameter to affect pulling sound */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	float SpeedInPullDirection;	
+	float SpeedInPullDirection;
 	
 	///@brief Data to save
 	FVector MoveDirection;
@@ -72,6 +78,9 @@ private:
 	// these dont need replication as grapple end location data should already be accurate
 	FVector GrappleLeftEndLocation;
 	FVector GrappleRightEndLocation;
+
+	FTimerHandle PowerslideTimerHandle;
+	FTimerDelegate PowerslideTimerDel;
 
 	/* Constant pulling force regardless of spring */
 	// UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
@@ -98,6 +107,24 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Grapple")
 	float PlayerBackwardSpringInfluence = 0.f;
+
+	/// @brief Powerslide variable sluff
+	float GroundFrictionPreValue;
+	float MaxWalkSpeedPreValue;
+
+	// Ratio of normal walkingspeed to stop sliding
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "PowerSlide")
+	float SpeedToStopSlide = 0.8f;
+
+	// Ratio of normal walkingspeed to cap boost from sliding
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "PowerSlide")
+	float SpeedBoostCap = 1.4f;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "PowerSlide")
+	float SlidingBrakingDecelerationWalking = 800.f;
+	
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "PowerSlide")
+	float SpeedBoostAmount = 8000.f;
 };
 
 class FSavedMove_MyMovement : public FSavedMove_Character

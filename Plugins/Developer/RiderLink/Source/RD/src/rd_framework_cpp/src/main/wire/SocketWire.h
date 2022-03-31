@@ -35,6 +35,7 @@ public:
 
 		std::timed_mutex lock;
 		mutable std::mutex socket_send_lock;
+		mutable std::mutex wire_send_lock;
 
 		std::thread thread{};
 
@@ -51,9 +52,6 @@ public:
 		static constexpr size_t RECEIVE_BUFFER_SIZE = 1u << 16;
 		mutable std::array<Buffer::word_t, RECEIVE_BUFFER_SIZE> receiver_buffer{};
 		mutable decltype(receiver_buffer)::iterator lo = receiver_buffer.begin(), hi = receiver_buffer.begin();
-
-		static constexpr size_t SEND_BUFFER_SIZE = 16 * 1024;
-		mutable Buffer local_send_buffer;
 
 		static constexpr int32_t ACK_MESSAGE_LENGTH = -1;
 		static constexpr int32_t PING_MESSAGE_LENGTH = -2;

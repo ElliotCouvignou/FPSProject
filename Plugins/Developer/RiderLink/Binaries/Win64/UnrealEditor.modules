@@ -6,6 +6,7 @@
 		"RiderBlueprintExtension": "UnrealEditor-RiderBlueprintExtension.dll",
 		"RiderGameControlExtension": "UnrealEditor-RiderGameControlExtension.dll",
 		"RiderLink": "UnrealEditor-RiderLink.dll",
-		"RiderLoggingExtension": "UnrealEditor-RiderLoggingExtension.dll"
+		"RiderLoggingExtension": "UnrealEditor-RiderLoggingExtension.dll",
+		"RiderShaderInfoDump": "UnrealEditor-RiderShaderInfoDump.dll"
 	}
 }

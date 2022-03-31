@@ -14,6 +14,7 @@ UFPSMovementComponent::UFPSMovementComponent(const FObjectInitializer& ObjectIni
 	:Super(ObjectInitializer)
 {
 	
+	
 }
 
 //============================================================================================
@@ -35,6 +36,7 @@ void UFPSMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector&
 {
 	Super::OnMovementUpdated(DeltaSeconds, OldLocation, OldVelocity);
 
+	
 	if (!CharacterOwner)
 	{
 		return;
@@ -53,15 +55,16 @@ void UFPSMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector&
 
 	if(bWantsToGrappleLeft)
 	{
-		UpdateGrappleMoement(DeltaSeconds, true);
+		UpdateGrappleMovement(DeltaSeconds, true);
 	}
 	if(bWantsToGrappleRight)
 	{
-		UpdateGrappleMoement(DeltaSeconds, false);
+		UpdateGrappleMovement(DeltaSeconds, false);
 	}
 	if(bWantsToPowerSlide)
 	{
-		UpdatePowerSlide(DeltaSeconds);
+		InitiatePowerSlide(DeltaSeconds);
+		bWantsToPowerSlide = false;
 	}
 }
 
@@ -87,7 +90,7 @@ void UFPSMovementComponent::StopGrappleRight()
 	bWantsToGrappleRight = false;
 }
 
-void UFPSMovementComponent::UpdateGrappleMoement(float DeltaTime, bool IsLeft)
+void UFPSMovementComponent::UpdateGrappleMovement(float DeltaTime, bool IsLeft)
 {
 	float PlayerPullInfluence = 0.f;
 	float PlayerSpringInfluence = 0.f;
@@ -126,10 +129,9 @@ void UFPSMovementComponent::UpdateGrappleMoement(float DeltaTime, bool IsLeft)
 	// not really force more like change in velocity but intuitively this is nicer to me idk lol
 	// TODO: find value for curve im too douinked for this rn
 	// Try above but in general when moving against the grapple
+	
 	const FVector Vel = Velocity;
 	SpeedInPullDirection = FMath::Clamp(Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal()), 0.f, 99999999.f);
-	//print(FString("SpeedInPullDirection: " + FString::SanitizeFloat(SpeedInPullDirection,2)));
-
 		
 	FVector Force = Dist.GetSafeNormal() * (DeltaTime * PullStrengthSpeedDirection->GetFloatValue(SpeedInPullDirection));
 	Force += InputVector.ProjectOnTo(Force) * Force.Size() * PlayerPullInfluence;
@@ -143,18 +145,58 @@ void UFPSMovementComponent::UpdateGrappleMoement(float DeltaTime, bool IsLeft)
 		SpringForce +=  InputVector.ProjectOnTo(Force) * SpringForce.Size() * PlayerSpringInfluence;
 		
 		Velocity += SpringForce;
-		//Character->LaunchCharacter(SpringForce, false, false);
-		//DrawDebugLine(GetWorld(), Character->GetActorLocation(), Character->GetActorLocation() + (SpringForce *200.f), FColor::Orange, false, 5.f, 0.f, 1.f);
 	}
 
-	//print(FString("mag: " + FString::SanitizeFloat(Force.Size(),2)));
 	Velocity += Force;
-	//Character->LaunchCharacter(Force, false, false);
 }
 
-void UFPSMovementComponent::UpdatePowerSlide(float DeltaTime)
+void UFPSMovementComponent::DoPowerSlide()
 {
+	bWantsToPowerSlide = true;
+}
+
+void UFPSMovementComponent::StopPowerSlide()
+{
+	bWantsToPowerSlide = false;
 	
+	MaxWalkSpeed = MaxWalkSpeedPreValue;
+	GroundFriction = GroundFrictionPreValue;
+	GetWorld()->GetTimerManager().ClearTimer(PowerslideTimerHandle);
+	print(FString("End PowerSlide"));
+}
+
+void UFPSMovementComponent::InitiatePowerSlide(float DeltaTime)
+{
+	print(FString("Start PowerSlide"));
+	GroundFrictionPreValue = GroundFriction;
+	MaxWalkSpeedPreValue = MaxWalkSpeed;
+	
+	MaxWalkSpeed = 0.f;
+	GroundFriction = 0.f;
+	BrakingDecelerationWalking = SlidingBrakingDecelerationWalking;
+	
+	/*FVector Boost = FVector(Velocity.Normalize()) * SpeedBoostAmount;
+	AddImpulse(Boost, false);*/
+
+	float Diff = MaxWalkSpeedPreValue*SpeedBoostCap - Velocity.Size();
+	if(Diff > 0)
+	{
+		float Boost = FMath::Min(400.f, Diff);
+		Velocity += FVector(Velocity.GetSafeNormal()) * Boost;
+		print(FString::SanitizeFloat(Boost,2));
+	}
+
+	PowerslideTimerDel.BindUFunction(this, FName("UpdatePowerSlide"));
+	GetWorld()->GetTimerManager().ClearTimer(PowerslideTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(PowerslideTimerHandle, PowerslideTimerDel, 0.2f, true);
+}
+
+void UFPSMovementComponent::UpdatePowerSlide()
+{
+	if(Velocity.Size2D() < MaxWalkSpeedPreValue*SpeedToStopSlide)
+	{
+		StopPowerSlide();
+	}
 }
 
 //Set input flags on character from saved inputs

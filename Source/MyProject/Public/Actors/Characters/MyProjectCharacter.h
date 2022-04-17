@@ -101,6 +101,9 @@ public:
 	UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
+	class UFPSMovementComponent* GetFPSMovementComponent() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FTransform GetRightHandLocation() const { return RightHandLocation; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -345,7 +348,6 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return ThirdPersonCameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return (bIsFirstPersonPerspective) ? FirstPersonCamera : ThirdPersonCamera; }
-
 	
 	/* Override Controller Posession*/
 	virtual void OnRep_Controller() override;

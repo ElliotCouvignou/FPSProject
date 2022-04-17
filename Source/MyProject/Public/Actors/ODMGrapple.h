@@ -19,6 +19,9 @@ class MYPROJECT_API AODMGrapple : public AActor
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	UCableComponent* Cable;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Abilities, meta = (AllowPrivateAccess = "true"))
+	UProjectileMovementComponent* ProjectileMovement;
 	
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Abilities, meta = (AllowPrivateAccess = "true"))
 	// UProjectileMovementComponent* ProjectileMovement;
@@ -31,7 +34,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	bool DisableGrapplePull = false; 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+	// no longer expose on spawn
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	bool IsLeftGrapple;
 	
 	/* Current used as MetaSound Parameter to affect pulling sound */

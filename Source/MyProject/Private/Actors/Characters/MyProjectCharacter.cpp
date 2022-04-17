@@ -211,6 +211,11 @@ void AMyProjectCharacter::LookUpAtRate(float Rate)
 }
 
 
+UFPSMovementComponent* AMyProjectCharacter::GetFPSMovementComponent() const
+{
+	return static_cast<UFPSMovementComponent*>(GetCharacterMovement());
+}
+
 UAbilitySystemComponent* AMyProjectCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -707,6 +712,7 @@ void AMyProjectCharacter::OnRep_CurrentWeapon(AFPSWeapon* LastWeapon)
 	//bChangedWeaponLocally = false;
 	SetCurrentWeapon(CurrentWeapon, LastWeapon);
 }
+
 
 void AMyProjectCharacter::OnRep_Controller()
 {

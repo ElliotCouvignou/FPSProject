@@ -36,9 +36,9 @@ AODMGrapple::AODMGrapple()
 		GrappleHead->SetGenerateOverlapEvents(false);
 		GrappleHead->SetCanEverAffectNavigation(false);
 
-		FScriptDelegate Delegate;
-		Delegate.BindUFunction(this, "OnGrappleHeadOverlap");
-		GrappleHead->OnComponentBeginOverlap.Add(Delegate);
+		//FScriptDelegate Delegate;
+		//Delegate.BindUFunction(this, "OnGrappleHeadOverlap");
+		//GrappleHead->OnComponentBeginOverlap.Add(Delegate);
 	}
 	
 	Cable = CreateDefaultSubobject<UCableComponent>(TEXT("Cable"));
@@ -51,6 +51,8 @@ AODMGrapple::AODMGrapple()
 	
 	SetActorTickEnabled(false);
 
+
+	ProjectileMovement = CreateOptionalDefaultSubobject<UProjectileMovementComponent>("ProjectileMovement");
 	// ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovement");
 	// ProjectileMovement->InitialSpeed = InitProjectileVelocity;
 	// ProjectileMovement->MaxSpeed = InitProjectileVelocity;
@@ -76,47 +78,20 @@ void AODMGrapple::BeginPlay()
 		Cable->SetAttachEndToComponent(ODMComponent, FName("GrappleSocket"));
 		Cable->EndLocation = FVector(0.f, 0.f, 0.f);  // this gets set to some weird offset idk why
 		
-		//Cable->SetAttachEndTo(Character, FName(ODMComponent->GetName()), FName("GrappleSocket"));		
-		// TArray<FVector> Locations;
-		// Cable->GetCableParticleLocations(Locations);
-		// USceneComponent* EndComponent = Cast<USceneComponent>(Cable->AttachEndTo.GetComponent(Character));
-		//
-		//FVector EndLocation = ODMComponent->GetSocketLocation(FName("GrappleSocket"));
-		// FVector EndLocation = EndComponent->GetSocketTransform(FName("GrappleSocket")).TransformPosition(Cable->EndLocation);
-		//
-		// DrawDebugSphere(GetWorld(), EndLocation, 32.f, 8, FColor::Blue, false, 5.f, 0.f, 1.f);
-		// DrawDebugSphere(GetWorld(), Character->GetActorLocation(), 32.f, 8, FColor::Green, false, 5.f, 0.f, 1.f);
-		//
-		// DrawDebugLine(GetWorld(), Character->GetActorLocation(), EndLocation, FColor::Purple, false, 5.f, 0.f, 1.f);
-		//
 	}
-
-	// begin play should fire automatically
-	// TODO: play audio hhere?
-
-	OnGrappleHeadOverlap();
+	
+	//OnGrappleHeadOverlap();
 	SetActorTickEnabled(true);
 	//GetWorldTimerManager().SetTimer(BeginPlayTimerHandle, this, &AODMGrapple::OnDelayedCableSegmentReduce, CableSegmentsDelay, false);
 }
 
 void AODMGrapple::Destroyed()
 {
-	if(Character)
-	{
-		UFPSMovementComponent* MoveComp = Cast<UFPSMovementComponent>(Character->GetCharacterMovement());
-		if(IsLeftGrapple)
-			MoveComp->StopGrappleLeft();
-		else
-			MoveComp->StopGrappleRight();
-	}
-	
 	Super::Destroyed();
 }
 
 void AODMGrapple::OnGrappleHeadOverlap()
 {
-	// TODO: play audio hhere?
-
 	if(Character)
 	{
 		UFPSMovementComponent* MoveComp = Cast<UFPSMovementComponent>(Character->GetCharacterMovement());
@@ -125,11 +100,6 @@ void AODMGrapple::OnGrappleHeadOverlap()
 		else
 			MoveComp->DoGrappleRight(GetActorLocation());
 	}
-	//DoGrapplePull = true;
-	
-	// ProjectileMovement->Velocity = FVector(0.f, 0.f, 0.f);
-	// ProjectileMovement->MaxSpeed = 0.f;
-	// ProjectileMovement->Deactivate();
 }
 
 // Called every frame
@@ -143,72 +113,6 @@ void AODMGrapple::Tick(float DeltaTime)
 	{
 		Cable->CableLength = Dist.Size();
 	}
-		
-	// if(DoGrapplePull /*&& HasAuthority()*/ && !DisableGrapplePull)
-	// {
-	// 	// print(FString("GrappleSocket Locaiton: " + ODMComponent->GetSocketLocation(FName("GrappleSocket")).ToString()));
-	// 	// print(FString("OwnerActor Locaiton: " + GetOwner()->GetActorLocation().ToString()));
-	// 	//
-	// 	float PlayerPullInfluence = 0.f;
-	// 	float PlayerSpringInfluence = 0.f;
-	// 	
-	// 	// Affect pullstrength through control direction (only when wanting to move)
-	// 	// TODO: get player input vector, currently not replicated cause risky so im deriving from acceleration, not the best
-	// 	FVector InputVector = Character->GetCharacterMovement()->GetCurrentAcceleration();//Character->GetPendingMovementInputVector();
-	// 	InputVector.Z = 0.f;
-	// 	InputVector.Normalize();
-	// 	
-	// 	if(InputVector.Size() > 0.f)
-	// 	{
-	// 		const FVector ControlRot = Character->GetControlRotation().Vector();
-	// 		const float Angle = FMath::Acos(FVector::DotProduct(InputVector , ControlRot )/ InputVector.Size()/ ControlRot.Size());
-	// 		if(Angle > PI / 2)
-	// 		{
-	// 			InputVector.Z -= Character->GetControlRotation().Vector().Z;
-	// 			PlayerPullInfluence = PlayerBackwardPullInfluence;
-	// 			PlayerSpringInfluence = PlayerBackwardSpringInfluence;
-	// 		}
-	// 		else
-	// 		{
-	// 			InputVector.Z += Character->GetControlRotation().Vector().Z; // add camera influence
-	// 			PlayerPullInfluence = PlayerForwardPullInfluence;
-	// 			PlayerSpringInfluence = PlayerForwardSpringInfluence;
-	// 		}
-	// 		
-	// 		InputVector.Normalize();
-	// 	
-	// 		//DrawDebugLine(GetWorld(), Character->GetActorLocation(), Character->GetActorLocation() + (InputVector *200.f), FColor::Purple, false, 5.f, 0.f, 1.f);
-	// 	}
-	// 	
-	// 	// not really force more like change in velocity but intuitively this is nicer to me idk lol
-	// 	// TODO: find value for curve im too douinked for this rn
-	// 	// Try above but in general when moving against the grapple
-	// 	const FVector Vel = Character->GetCharacterMovement()->Velocity;
-	// 	SpeedInPullDirection = FMath::Clamp(Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal()), 0.f, 99999999.f);
-	// 	//print(FString("SpeedInPullDirection: " + FString::SanitizeFloat(SpeedInPullDirection,2)));
-	//
-	// 	
-	// 	FVector Force = Dist.GetSafeNormal() * (DeltaTime * PullStrengthSpeedDirection->GetFloatValue(SpeedInPullDirection));
-	// 	Force += InputVector.ProjectOnTo(Force) * Force.Size() * PlayerPullInfluence;
-	// 			
-	// 	const float Angle = FMath::Acos(FVector::DotProduct(Vel , Force )/ Vel.Size()/ Force.Size());
-	// 	if(Angle > PI / 2)
-	// 	{
-	// 		// TODO: formula is k * dt * v / m = dv/dt but velocity projecting along spring direction doesn't have its magnitude correct due to normals.
-	// 		FVector SpringForce = Vel.GetSafeNormal().ProjectOnTo(Dist.GetSafeNormal()) * DeltaTime * SpringFactor * Vel.Size() * -1.f;
-	// 		FVector Add = InputVector.ProjectOnTo(SpringForce) * SpringForce.Size() * PlayerSpringInfluence;
-	// 		SpringForce +=  InputVector.ProjectOnTo(Force) * SpringForce.Size() * PlayerSpringInfluence;
-	// 		
-	// 		Character->GetCharacterMovement()->Velocity += SpringForce;
-	// 		//Character->LaunchCharacter(SpringForce, false, false);
-	//
-	// 		//DrawDebugLine(GetWorld(), Character->GetActorLocation(), Character->GetActorLocation() + (SpringForce *200.f), FColor::Orange, false, 5.f, 0.f, 1.f);
-	// 	}
-	//
-	// 	//print(FString("mag: " + FString::SanitizeFloat(Force.Size(),2)));
-	// 	Character->GetCharacterMovement()->Velocity += Force;
-	// 	//Character->LaunchCharacter(Force, false, false);
-	// }
 }
 
 // ovveride replciation with replication variables

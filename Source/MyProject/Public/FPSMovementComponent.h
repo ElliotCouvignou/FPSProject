@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/EngineTypes.h"
 #include "FPSMovementComponent.generated.h"
 
 
@@ -81,7 +82,6 @@ public:
 	virtual bool DoJump(bool bReplayingMoves) override;
 	// copy of override without maxwalkanglereference
 	// virtual bool IsWalkable(const FHitResult& Hit) const override;
-	virtual bool StepUp(const FVector& GravDir, const FVector& Delta, const FHitResult &Hit, FStepDownResult* OutStepDownResult = NULL) override;
 
 
 
@@ -95,10 +95,6 @@ public:
 
 protected:
 	virtual bool CanAttemptJump() const override;
-	
-	// following are overrides just to remove all implementations of walkable surfaces for smooth sliding
-	virtual float SlideAlongSurface(const FVector& Delta, float Time, const FVector& Normal, FHitResult& Hit, bool bHandleImpact) override;
-	virtual void TwoWallAdjust(FVector& Delta, const FHitResult& Hit, const FVector& OldHitNormal) const override;
 
 
 private:
@@ -121,6 +117,9 @@ public:
 	void BeginWallRun();
 	UFUNCTION(BlueprintCallable, Category = "Client")
 	void StopWallRun();
+
+	UFUNCTION(BlueprintCallable, Category = "Client", BlueprintPure)
+	const FVector& GetWallrunningSurfaceNormal() const { return WallrunningHit.ImpactNormal;}
 	
 	UFUNCTION()
 	void PhysUpdateWallrunMovement(float DeltaTime, int32 iterations);
@@ -187,7 +186,7 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Wallrun")
 	float WallrunLateralFriction = 10.f;
-
+	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Wallrun")
 	float MaxWallrunWalkSpeed = 1500.f;
 	
@@ -220,8 +219,9 @@ private:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Wallrun")
 	FVector WallrunTraceOffset = FVector(0.f, 0.f, 50.f);
 
-	FVector WallrunningSurfaceNormal;
+	FHitResult WallrunningHit;
 	FVector WallrunningDir;
+	FVector WallrunningImpactPoint;  //Point of closest contact in world space
 	EWallRunSide WallRunSide;	
 
 	// if bDoingWallrun then this holds actor referenced as "wall" we are running on

@@ -114,6 +114,10 @@ void UFPSMovementComponent::BeginPlay()
 		// Bind to the OnActorHot component so we're notified when the owning actor hits something (like a wall)
 		GetPawnOwner()->OnActorHit.AddDynamic(this, &UFPSMovementComponent::OnActorHit);
 	}
+
+	// TODO: organize this better just chache values to restor out of sldiing
+	GroundFrictionPreValue = GroundFriction;
+	MaxWalkSpeedPreValue = MaxWalkSpeed;
 }
 
 void UFPSMovementComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -139,7 +143,7 @@ float UFPSMovementComponent::GetMaxSpeed() const
 
 bool UFPSMovementComponent::DoJump(bool bReplayingMoves)
 {
-	if(bDoingPowerSlide)
+	if(bDoingPowerSlide || bWantsToPowerSlide)
 	{
 		StopPowerSlide();
 	}
@@ -152,7 +156,7 @@ bool UFPSMovementComponent::DoJump(bool bReplayingMoves)
 			JumpDir  = (CharacterOwner->GetControlRotation()).Vector();
 		}
 		
-		if(JumpDir.Dot(WallrunningSurfaceNormal) > 0)
+		if(JumpDir.Dot(WallrunningHit.ImpactNormal) > 0)
 		{
 			StopWallRun();
 		
@@ -176,203 +180,6 @@ bool UFPSMovementComponent::DoJump(bool bReplayingMoves)
 	}
 	
 	return Super::DoJump(bReplayingMoves);
-}
-
-bool UFPSMovementComponent::StepUp(const FVector& GravDir, const FVector& Delta, const FHitResult& InHit,
-	FStepDownResult* OutStepDownResult)
-{
-
-	SCOPE_CYCLE_COUNTER(STAT_CharStepUp);
-
-	if (!CanStepUp(InHit) || MaxStepHeight <= 0.f)
-	{
-		return false;
-	}
-
-	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
-	float PawnRadius, PawnHalfHeight;
-	CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleSize(PawnRadius, PawnHalfHeight);
-
-	// Don't bother stepping up if top of capsule is hitting something.
-	const float InitialImpactZ = InHit.ImpactPoint.Z;
-	if (InitialImpactZ > OldLocation.Z + (PawnHalfHeight - PawnRadius))
-	{
-		return false;
-	}
-
-	if (GravDir.IsZero())
-	{
-		return false;
-	}
-
-	// Gravity should be a normalized direction
-	ensure(GravDir.IsNormalized());
-
-	float StepTravelUpHeight = MaxStepHeight;
-	float StepTravelDownHeight = StepTravelUpHeight;
-	const float StepSideZ = -1.f * FVector::DotProduct(InHit.ImpactNormal, GravDir);
-	float PawnInitialFloorBaseZ = OldLocation.Z - PawnHalfHeight;
-	float PawnFloorPointZ = PawnInitialFloorBaseZ;
-
-	if (IsMovingOnGround() && CurrentFloor.IsWalkableFloor())
-	{
-		// Since we float a variable amount off the floor, we need to enforce max step height off the actual point of impact with the floor.
-		const float FloorDist = FMath::Max(0.f, CurrentFloor.GetDistanceToFloor());
-		PawnInitialFloorBaseZ -= FloorDist;
-		StepTravelUpHeight = FMath::Max(StepTravelUpHeight - FloorDist, 0.f);
-		StepTravelDownHeight = (MaxStepHeight + MAX_FLOOR_DIST*2.f);
-
-		const bool bHitVerticalFace = !IsWithinEdgeTolerance(InHit.Location, InHit.ImpactPoint, PawnRadius);
-		if (!CurrentFloor.bLineTrace && !bHitVerticalFace)
-		{
-			PawnFloorPointZ = CurrentFloor.HitResult.ImpactPoint.Z;
-		}
-		else
-		{
-			// Base floor point is the base of the capsule moved down by how far we are hovering over the surface we are hitting.
-			PawnFloorPointZ -= CurrentFloor.FloorDist;
-		}
-	}
-
-	// Don't step up if the impact is below us, accounting for distance from floor.
-	if (InitialImpactZ <= PawnInitialFloorBaseZ)
-	{
-		return false;
-	}
-
-	// Scope our movement updates, and do not apply them until all intermediate moves are completed.
-	FScopedMovementUpdate ScopedStepUpMovement(UpdatedComponent, EScopedUpdate::DeferredUpdates);
-
-	// step up - treat as vertical wall
-	FHitResult SweepUpHit(1.f);
-	const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
-	MoveUpdatedComponent(-GravDir * StepTravelUpHeight, PawnRotation, true, &SweepUpHit);
-
-	if (SweepUpHit.bStartPenetrating)
-	{
-		// Undo movement
-		ScopedStepUpMovement.RevertMove();
-		return false;
-	}
-
-	// step fwd
-	FHitResult Hit(1.f);
-	MoveUpdatedComponent( Delta, PawnRotation, true, &Hit);
-
-	// Check result of forward movement
-	if (Hit.bBlockingHit)
-	{
-		if (Hit.bStartPenetrating)
-		{
-			// Undo movement
-			ScopedStepUpMovement.RevertMove();
-			return false;
-		}
-
-		// If we hit something above us and also something ahead of us, we should notify about the upward hit as well.
-		// The forward hit will be handled later (in the bSteppedOver case below).
-		// In the case of hitting something above but not forward, we are not blocked from moving so we don't need the notification.
-		if (SweepUpHit.bBlockingHit && Hit.bBlockingHit)
-		{
-			HandleImpact(SweepUpHit);
-		}
-
-		// pawn ran into a wall
-		HandleImpact(Hit);
-		if (IsFalling())
-		{
-			return true;
-		}
-
-		// adjust and try again
-		const float ForwardHitTime = Hit.Time;
-		const float ForwardSlideAmount = SlideAlongSurface(Delta, 1.f - Hit.Time, Hit.Normal, Hit, true);
-		
-		if (IsFalling())
-		{
-			ScopedStepUpMovement.RevertMove();
-			return false;
-		}
-
-		// If both the forward hit and the deflection got us nowhere, there is no point in this step up.
-		if (ForwardHitTime == 0.f && ForwardSlideAmount == 0.f)
-		{
-			ScopedStepUpMovement.RevertMove();
-			return false;
-		}
-	}
-	
-	// Step down
-	MoveUpdatedComponent(GravDir * StepTravelDownHeight, UpdatedComponent->GetComponentQuat(), true, &Hit);
-
-	// If step down was initially penetrating abort the step up
-	if (Hit.bStartPenetrating)
-	{
-		ScopedStepUpMovement.RevertMove();
-		return false;
-	}
-
-	FStepDownResult StepDownResult;
-	if (Hit.IsValidBlockingHit())
-	{	
-		// See if this step sequence would have allowed us to travel higher than our max step height allows.
-		const float DeltaZ = Hit.ImpactPoint.Z - PawnFloorPointZ;
-		if (DeltaZ > MaxStepHeight)
-		{
-			//UE_LOG(LogCharacterMovement, VeryVerbose, TEXT("- Reject StepUp (too high Height %.3f) up from floor base %f to %f"), DeltaZ, PawnInitialFloorBaseZ, NewLocation.Z);
-			ScopedStepUpMovement.RevertMove();
-			return false;
-		}
-
-		// Reject moves where the downward sweep hit something very close to the edge of the capsule. This maintains consistency with FindFloor as well.
-		if (!IsWithinEdgeTolerance(Hit.Location, Hit.ImpactPoint, PawnRadius))
-		{
-			//UE_LOG(LogCharacterMovement, VeryVerbose, TEXT("- Reject StepUp (outside edge tolerance)"));
-			ScopedStepUpMovement.RevertMove();
-			return false;
-		}
-
-		// Don't step up onto invalid surfaces if traveling higher.
-		if (DeltaZ > 0.f && !CanStepUp(Hit))
-		{
-			//UE_LOG(LogCharacterMovement, VeryVerbose, TEXT("- Reject StepUp (up onto surface with !CanStepUp())"));
-			ScopedStepUpMovement.RevertMove();
-			return false;
-		}
-
-		// See if we can validate the floor as a result of this step down. In almost all cases this should succeed, and we can avoid computing the floor outside this method.
-		if (OutStepDownResult != NULL)
-		{
-			FindFloor(UpdatedComponent->GetComponentLocation(), StepDownResult.FloorResult, false, &Hit);
-
-			// Reject unwalkable normals if we end up higher than our initial height.
-			// It's fine to walk down onto an unwalkable surface, don't reject those moves.
-			if (Hit.Location.Z > OldLocation.Z)
-			{
-				// We should reject the floor result if we are trying to step up an actual step where we are not able to perch (this is rare).
-				// In those cases we should instead abort the step up and try to slide along the stair.
-				if (!StepDownResult.FloorResult.bBlockingHit && StepSideZ < CharacterMovementConstants::MAX_STEP_SIDE_Z)
-				{
-					ScopedStepUpMovement.RevertMove();
-					return false;
-				}
-			}
-
-			StepDownResult.bComputedFloor = true;
-		}
-	}
-	
-	// Copy step down result.
-	if (OutStepDownResult != NULL)
-	{
-		*OutStepDownResult = StepDownResult;
-	}
-
-	// Don't recalculate velocity based on this height adjustment, if considering vertical adjustments.
-	bJustTeleported |= !bMaintainHorizontalGroundVelocity;
-
-	return true;
-	return Super::StepUp(GravDir, Delta, Hit, OutStepDownResult);
 }
 
 
@@ -442,6 +249,11 @@ void UFPSMovementComponent::PhysFalling(float deltaTime, int32 Iterations)
 	if (GetOwner()->GetLocalRole() == ROLE_SimulatedProxy)
 		return;
 
+	if(bDoingPowerSlide)
+	{
+		StopPowerSlide();
+	}
+	
 	// if(bWantsToWallRun && !bDoingWallrun)
 	// {
 	// 	BeginWallRun();
@@ -477,33 +289,10 @@ void UFPSMovementComponent::PhysWalking(float deltaTime, int32 Iterations)
 	}
 	
 	// test if wants transition (currently at limit of walkangle), do this by performing linetrace towards floor
-	//  FHitResult Hit;
-	//  const FVector Dir = FVector(0.f, 0.f, -1.f);
-	//
-	// FindFloor(Hit);
-	//  if(GetWorld()->LineTraceSingleByChannel(Hit, GetActorLocation() + FVector(0,0,4), GetActorLocation() + Dir * 200, ECollisionChannel::ECC_GameTraceChannel3))
-	//  {
-	//  	UPrimitiveComponent* OtherComp = Hit.Component.Get();
-	//  	if(!(bWantsToWallRun || bDoingWallrun) && OtherComp && !bDoingPowerSlide)
-	//  	{
-	//  		/// ECC_GameTraceChannel2 == "Wallrunnable", Check Config/DefaultEngine.ini to ensure
-	//  		if(OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel2)
-	//  		{
-	//  			if(IsValidWallrunAngle(Hit.ImpactNormal))
-	//  			{
-	//  				WallrunningComponent = OtherComp;
-	//  		
-	//  				FindWallRunDirection(Hit.ImpactNormal);
-	//  				BeginWallRun();
-	//  			}
-	//  		}
-	//  	}
-	//  }
-
 	if(CurrentFloor.HitResult.Component.IsValid() && CurrentFloor.HitResult.Component.Get()->GetCollisionObjectType() == ECC_GameTraceChannel2)
 	{
 		UPrimitiveComponent* OtherComp = CurrentFloor.HitResult.Component.Get();
-		if(!(bWantsToWallRun || bDoingWallrun) && OtherComp && !bDoingPowerSlide)
+		if(!(bWantsToWallRun || bDoingWallrun) && OtherComp)
 		{
 			/// ECC_GameTraceChannel2 == "Wallrunnable", Check Config/DefaultEngine.ini to ensure
 			if(OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel2)
@@ -511,9 +300,15 @@ void UFPSMovementComponent::PhysWalking(float deltaTime, int32 Iterations)
 				if(IsValidWallrunAngle(CurrentFloor.HitResult.ImpactNormal))
 				{
 					WallrunningComponent = OtherComp;
-			
+					WallrunningHit = CurrentFloor.HitResult;
+					
 					FindWallRunDirection(CurrentFloor.HitResult.ImpactNormal);
 					BeginWallRun();
+
+					if(bDoingPowerSlide)
+					{
+						StopPowerSlide();
+					}
 				}
 			}
 		}
@@ -539,82 +334,6 @@ bool UFPSMovementComponent::CanAttemptJump() const
 }
 
 
-float UFPSMovementComponent::SlideAlongSurface(const FVector& Delta, float Time, const FVector& InNormal, FHitResult& Hit,
-                                               bool bHandleImpact)
-{
-	// if (!Hit.bBlockingHit)
-	// {
-	// 	return 0.f;
-	// }
-	//
-	// FVector Normal(InNormal);
-	// if (IsMovingOnGround())
-	// {
-	// 	// We don't want to be pushed up an unwalkable surface.
-	// 	if (Normal.Z < -KINDA_SMALL_NUMBER)
-	// 	{
-	// 		// Don't push down into the floor when the impact is on the upper portion of the capsule.
-	// 		if (CurrentFloor.FloorDist < MIN_FLOOR_DIST && CurrentFloor.bBlockingHit)
-	// 		{
-	// 			const FVector FloorNormal = CurrentFloor.HitResult.Normal;
-	// 			const bool bFloorOpposedToMovement = (Delta | FloorNormal) < 0.f && (FloorNormal.Z < 1.f - DELTA);
-	// 			if (bFloorOpposedToMovement)
-	// 			{
-	// 				Normal = FloorNormal;
-	// 			}
-	// 			
-	// 			Normal = Normal.GetSafeNormal2D();
-	// 		}
-	// 	}
-	// }
-	
-	// return Super::Super::SlideAlongSurface(Delta, Time, Normal, Hit, bHandleImpact);
-	return Super::SlideAlongSurface(Delta, Time, InNormal, Hit, bHandleImpact);
-}
-
-void UFPSMovementComponent::TwoWallAdjust(FVector& Delta, const FHitResult& Hit, const FVector& OldHitNormal) const
-{
-	return Super::TwoWallAdjust(Delta, Hit, OldHitNormal);
-
-	
-	// const FVector InDelta = Delta;
-	// Super::TwoWallAdjust(Delta, Hit, OldHitNormal);
-	//
-	// if (IsMovingOnGround())
-	// {
-	// 	// Allow slides up walkable surfaces, but not unwalkable ones (treat those as vertical barriers).
-	// 	if (Delta.Z > 0.f)
-	// 	{
-	// 		if (Hit.Normal.Z > KINDA_SMALL_NUMBER)
-	// 		{
-	// 			// Maintain horizontal velocity
-	// 			const float Time = (1.f - Hit.Time);
-	// 			const FVector ScaledDelta = Delta.GetSafeNormal() * InDelta.Size();
-	// 			Delta = FVector(InDelta.X, InDelta.Y, ScaledDelta.Z / Hit.Normal.Z) * Time;
-	//
-	// 			// Should never exceed MaxStepHeight in vertical component, so rescale if necessary.
-	// 			// This should be rare (Hit.Normal.Z above would have been very small) but we'd rather lose horizontal velocity than go too high.
-	// 			if (Delta.Z > MaxStepHeight)
-	// 			{
-	// 				const float Rescale = MaxStepHeight / Delta.Z;
-	// 				Delta *= Rescale;
-	// 			}
-	// 		}
-	// 		else
-	// 		{
-	// 			Delta.Z = 0.f;
-	// 		}
-	// 	}
-	// 	else if (Delta.Z < 0.f)
-	// 	{
-	// 		// Don't push down into the floor.
-	// 		if (CurrentFloor.FloorDist < MIN_FLOOR_DIST && CurrentFloor.bBlockingHit)
-	// 		{
-	// 			Delta.Z = 0.f;
-	// 		}
-	// 	}
-	// }
-}
 
 void UFPSMovementComponent::OnActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse,
                                        const FHitResult& Hit)
@@ -623,7 +342,6 @@ void UFPSMovementComponent::OnActorHit(AActor* SelfActor, AActor* OtherActor, FV
 	UPrimitiveComponent* OtherComp = Hit.Component.Get();
 	if(!(bWantsToWallRun || bDoingWallrun) && OtherComp && !bDoingPowerSlide && IsFalling())
 	{
-		print(FString("OnActorHit"));
 		/// ECC_GameTraceChannel2 == "Wallrunnable", Check Config/DefaultEngine.ini to ensure
 		if(OtherComp->GetCollisionObjectType() == ECC_GameTraceChannel2)
 		{
@@ -659,7 +377,18 @@ void UFPSMovementComponent::FindWallRunDirection(const FVector& surface_normal)
 
 	// Find the direction parallel to the wall in the direction the player is moving
 	WallrunningDir = FVector::CrossProduct(surface_normal, crossVector).GetSafeNormal();
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation() + WallrunTraceOffset, GetOwner()->GetActorLocation() +WallrunTraceOffset+ WallrunningDir * 20.f, FColor::Red, false, -1, 0, 1);
+	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation() + WallrunTraceOffset, GetOwner()->GetActorLocation() +WallrunTraceOffset+ WallrunningDir * 200.f, FColor::Red, false, -1, 0, 1);
+
+	//TODO: move this to own func or som
+	// Gather distance info from wall to colliding point of player's capsule, this is for use later on grip force calc
+	FHitResult Hit;
+	if(GetWorld()->LineTraceSingleByChannel(Hit, WallrunningHit.ImpactPoint, GetCharacterOwner()->GetActorLocation(), ECollisionChannel::ECC_Pawn))
+	{
+		if(Hit.GetActor() == GetCharacterOwner())
+		{
+			WallrunningImpactPoint = Hit.ImpactPoint;
+		}
+	}
 	
 }
 
@@ -672,8 +401,6 @@ bool UFPSMovementComponent::IsValidWallrunAngle(const FVector& surface_normal) c
 	// Find the angle of the wall
 	float wallAngle = FMath::Acos(FVector::DotProduct(normalNoZ, surface_normal)) * 180 / PI;
 	
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation()+ WallrunTraceOffset, GetOwner()->GetActorLocation() + WallrunTraceOffset+ surface_normal * 60.f, FColor::Emerald, false, -1, 0, 3);
-
 	// Return true if the wall angle is less than the walkable floor angle	
 	return wallAngle >= MinAngleToStartWallrun && wallAngle <= MaxWallrunAngle;
 }
@@ -692,12 +419,12 @@ bool UFPSMovementComponent::ShouldContinueWallrun()
 		if(Floor.bWalkableFloor && Floor.HitResult.Component.Get() == WallrunningComponent)
 		{
 			// with valid wallruning data and angles, calculate the wallrunning dir
-			WallrunningSurfaceNormal = Floor.HitResult.ImpactNormal;
+			WallrunningHit = Floor.HitResult;
 			FindWallRunDirection(Floor.HitResult.ImpactNormal);
 			return true;
 		}
 	}
-
+	
 	// No walrunnable floor beneath, check sides
 	// Performe trace, gather info on distance and determine if our current state with the wall is still valid. Otherwise we will return false
 	// and get the hell out of this movestate
@@ -715,7 +442,7 @@ bool UFPSMovementComponent::ShouldContinueWallrun()
 		if(Hit.Component.Get() == WallrunningComponent && IsValidWallrunAngle(Hit.ImpactNormal))
 		{
 			// with valid wallruning data and angles, calculate the wallrunning dir
-			WallrunningSurfaceNormal = Hit.ImpactNormal;
+			WallrunningHit = Hit;
 			FindWallRunDirection(Hit.ImpactNormal);
 			return true;
 		}
@@ -739,10 +466,10 @@ void UFPSMovementComponent::BeginWallRun()
 		// }
 		// else
 		// {
-		// 	const FVector BoostDir = (WallRunSide == EWallRunSide::RIGHT) ? (WallrunningDir.Cross(WallrunningSurfaceNormal)).GetSafeNormal() : (WallrunningSurfaceNormal.Cross(WallrunningDir)).GetSafeNormal();
+		// 	const FVector BoostDir = (WallRunSide == EWallRunSide::RIGHT) ? (WallrunningDir.Cross(WallrunningHit.ImpactNormal)).GetSafeNormal() : (WallrunningHit.ImpactNormal.Cross(WallrunningDir)).GetSafeNormal();
 		// 	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + BoostDir * 200.f, FColor::Orange, false, 12.2f, 0, 1);
 		// 	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + WallrunningDir * 200.f, FColor::Red, false, 12.2f, 0, 1);
-		// 	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + WallrunningSurfaceNormal * 200.f, FColor::Magenta, false, 12.2f, 0, 1);
+		// 	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + WallrunningHit.ImpactNormal * 200.f, FColor::Magenta, false, 12.2f, 0, 1);
 		//
 		//
 		// 	//Velocity += BoostDir * WallrunStartBoost;
@@ -788,7 +515,7 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 		{
 			// Acceleration = FallAcceleration for CalcVelocity(), but we restore it after using it.
 			TGuardValue<FVector> RestoreAcceleration(Acceleration, FallAcceleration);
-			Acceleration = FVector::VectorPlaneProject(Acceleration, WallrunningSurfaceNormal);
+			Acceleration = FVector::VectorPlaneProject(Acceleration, WallrunningHit.ImpactNormal);
 			//Velocity.Z = 0.f;
 			CalcVelocity(DeltaTime, WallrunLateralFriction, false, MaxDecel);
 			//Velocity.Z = OldVelocity.Z;
@@ -800,9 +527,9 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 	FVector Gravity{0.f, 0.f, GetGravityZ()};
 	Velocity = NewFallVelocity(Velocity, Gravity * WallrunGravityCoeff, DeltaTime);
 		
-	if(Velocity.Z < -45.f)
+	if(Velocity.Z < -35.f)
 	{
-		Velocity.Z += Velocity.Z*-1.2f * DeltaTime;
+		Velocity.Z += Velocity.Z*-1.8f * DeltaTime;
 	}
 
 
@@ -811,13 +538,27 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 	// const FVector crossVector = WallRunSide == EWallRunSide::LEFT ? FVector(0.0f, 0.0f, -1.0f) : FVector(0.0f, 0.0f, 1.0f);
 	// FVector traceStart = GetPawnOwner()->GetActorLocation() + WallrunTraceOffset + (WallrunningDir * 20.0f);
 	// FVector traceEnd = traceStart + (FVector::CrossProduct(WallrunningDir, crossVector) * MaxWallrunDistance);
+
+	DrawDebugLine(GetWorld(), WallrunningHit.ImpactPoint , WallrunningHit.ImpactPoint+ WallrunningHit.ImpactNormal * 160.f, FColor::Emerald, false, -1, 0, 3);
+
 	
-	FVector Grip = WallrunningSurfaceNormal * -1 * WallrunGripForce;  //(traceEnd - traceStart).GetSafeNormal();
-	//AddForce(Grip);
+	const float Dist = FMath::Max((WallrunningHit.ImpactPoint - WallrunningImpactPoint).Size() - 40.f, 0.f);
+
+	DrawDebugSphere(GetWorld(), WallrunningImpactPoint, 10.f, 10, FColor::Cyan);
+	DrawDebugSphere(GetWorld(), WallrunningHit.ImpactPoint, 14.f, 10, FColor::Red);
 	
-	Grip *= WallrunGripForce * DeltaTime;
+	print(FString("Dist: ") + FString::SanitizeFloat(Dist,2));
+
+	if(Dist > 0.f)
+	{
+		FVector Grip = WallrunningHit.ImpactNormal * -1 * WallrunGripForce * Dist;  //(traceEnd - traceStart).GetSafeNormal();
+		//AddForce(Grip);
 	
-	Velocity += Grip;
+		Grip *= WallrunGripForce * DeltaTime;
+		Grip.Z = 0.f;
+	
+		Velocity += Grip;
+	}
 
 	//AddForce(MaxWallrunWalkSpeed * GetInputVector().ProjectOnTo(WallrunningDir));
 	 // // FVector DeltaMov = Velocity;
@@ -1002,9 +743,6 @@ void UFPSMovementComponent::StopPowerSlide()
 
 void UFPSMovementComponent::InitiatePowerSlide(float DeltaTime)
 {	
-	GroundFrictionPreValue = GroundFriction;
-	MaxWalkSpeedPreValue = MaxWalkSpeed;
-	
 	MaxWalkSpeed = 0.f;
 	GroundFriction = 0.2f;
 	BrakingDecelerationWalking = SlidingBrakingDecelerationWalking;

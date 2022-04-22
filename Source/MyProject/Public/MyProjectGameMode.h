@@ -32,6 +32,10 @@ public:
 	/* Players who joined an need to be handled for team assignment, spawns, etc. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<AMyPlayerController*> PendingPlayers;
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TSubclassOf<AMyProjectCharacter> PlayerClass;
+	
 	
 	/* Generally unsafe and takes first found playerstart */
 	UFUNCTION(BlueprintCallable)
@@ -58,8 +62,6 @@ protected:
 	float RespawnDelay;
 
 	float EndGameToLevelLeaveDelay = 10.f;
-
-	TSubclassOf<class AMyProjectCharacter> PlayerClass;
 
 	FTimerHandle MatchEndedTimerHandle;
 	FTimerHandle MatchTimerHandle;

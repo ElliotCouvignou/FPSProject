@@ -11,12 +11,10 @@
 
 DECLARE_CYCLE_STAT(TEXT("Char StepUp"), STAT_CharStepUp, STATGROUP_Character);
 
-namespace CharacterMovementConstants
+namespace LyraCharacter
 {
-	// MAGIC NUMBERS
-	const float MAX_STEP_SIDE_Z = 0.08f;	// maximum z value for the normal on the vertical side of steps
-	const float SWIMBOBSPEED = -80.f;
-	const float VERTICAL_SLOPE_NORMAL_Z = 0.001f; // Slope is vertical if Abs(Normal.Z) <= this threshold. Accounts for precision problems that sometimes angle normals slightly off horizontal for vertical surface.
+	static float GroundTraceDistance = 100000.0f;
+	FAutoConsoleVariableRef CVar_GroundTraceDistance(TEXT("LyraCharacter.GroundTraceDistance"), GroundTraceDistance, TEXT("Distance to trace down when generating ground information."), ECVF_Cheat);
 }
 
 class FNetworkPredictionData_Client* UFPSMovementComponent::GetPredictionData_Client() const
@@ -104,6 +102,53 @@ FVector UFPSMovementComponent::GetCharacterMovementInputVector()
 	return ret;
 }
 
+const FLyraCharacterGroundInfo& UFPSMovementComponent::GetGroundInfo()
+{
+	if (!CharacterOwner || (GFrameCounter == CachedGroundInfo.LastUpdateFrame))
+	{
+		return CachedGroundInfo;
+	}
+
+	if (MovementMode == MOVE_Walking)
+	{
+		CachedGroundInfo.GroundHitResult = CurrentFloor.HitResult;
+		CachedGroundInfo.GroundDistance = 0.0f;
+	}
+	else
+	{
+		const UCapsuleComponent* CapsuleComp = CharacterOwner->GetCapsuleComponent();
+		check(CapsuleComp);
+
+		const float CapsuleHalfHeight = CapsuleComp->GetUnscaledCapsuleHalfHeight();
+		const ECollisionChannel CollisionChannel = (UpdatedComponent ? UpdatedComponent->GetCollisionObjectType() : ECC_Pawn);
+		const FVector TraceStart(GetActorLocation());
+		const FVector TraceEnd(TraceStart.X, TraceStart.Y, (TraceStart.Z - LyraCharacter::GroundTraceDistance - CapsuleHalfHeight));
+
+		FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(LyraCharacterMovementComponent_GetGroundInfo), false, CharacterOwner);
+		FCollisionResponseParams ResponseParam;
+		InitCollisionParams(QueryParams, ResponseParam);
+
+		FHitResult HitResult;
+		GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, CollisionChannel, QueryParams, ResponseParam);
+
+		CachedGroundInfo.GroundHitResult = HitResult;
+		CachedGroundInfo.GroundDistance = LyraCharacter::GroundTraceDistance;
+
+		if (MovementMode == MOVE_NavWalking)
+		{
+			CachedGroundInfo.GroundDistance = 0.0f;
+		}
+		else if (HitResult.bBlockingHit)
+		{
+			CachedGroundInfo.GroundDistance = FMath::Max((HitResult.Distance - CapsuleHalfHeight), 0.0f);
+		}
+	}
+
+	CachedGroundInfo.LastUpdateFrame = GFrameCounter;
+
+	return CachedGroundInfo;
+}
+
 void UFPSMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -118,6 +163,7 @@ void UFPSMovementComponent::BeginPlay()
 	// TODO: organize this better just chache values to restor out of sldiing
 	GroundFrictionPreValue = GroundFriction;
 	MaxWalkSpeedPreValue = MaxWalkSpeed;
+	BrakingDecelerationPreValue = BrakingDecelerationWalking;
 }
 
 void UFPSMovementComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -323,7 +369,6 @@ void UFPSMovementComponent::ProcessLanded(const FHitResult& Hit, float remaining
 
 	if(bDoingWallrun && !IsValidWallrunAngle(Hit.ImpactNormal))
 	{
-		print(FString("ProcessLanded"));
 		StopWallRun();
 	}
 }
@@ -377,7 +422,7 @@ void UFPSMovementComponent::FindWallRunDirection(const FVector& surface_normal)
 
 	// Find the direction parallel to the wall in the direction the player is moving
 	WallrunningDir = FVector::CrossProduct(surface_normal, crossVector).GetSafeNormal();
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation() + WallrunTraceOffset, GetOwner()->GetActorLocation() +WallrunTraceOffset+ WallrunningDir * 200.f, FColor::Red, false, -1, 0, 1);
+	//Line(GetWorld(), GetOwner()->GetActorLocation() + WallrunTraceOffset, GetOwner()->GetActorLocation() +WallrunTraceOffset+ WallrunningDir * 200.f, FColor::Red, false, -1, 0, 1);
 
 	//TODO: move this to own func or som
 	// Gather distance info from wall to colliding point of player's capsule, this is for use later on grip force calc
@@ -432,7 +477,7 @@ bool UFPSMovementComponent::ShouldContinueWallrun()
 	FVector traceStart = GetPawnOwner()->GetActorLocation() + WallrunTraceOffset /*+ (WallrunningDir * 20.0f)*/;
 	FVector traceEnd = traceStart + (FVector::CrossProduct(WallrunningDir, crossVector) * MaxWallrunDistance);
 
-	DrawDebugLine(GetWorld(), traceStart, traceEnd, FColor::Blue, false, .2f, 0, 4);
+	//DrawDebugLine(GetWorld(), traceStart, traceEnd, FColor::Blue, false, .2f, 0, 4);
 
 	/// Perform linetrace with ECC_GameTraceChannel3 == "WallrunableTrace", Check Config/DefaultEngine.ini to ensure
 	/// we dont use 12 or "Wallrunnable" since player's own meshges will block with trace
@@ -478,8 +523,6 @@ void UFPSMovementComponent::BeginWallRun()
 	
 	
 		OnWallrunStarted.Broadcast();
-
-		print(FString("BeginWallrun"));
 	}
 }
 
@@ -491,9 +534,6 @@ void UFPSMovementComponent::StopWallRun()
 	bWantsToWallRun = false;
 	
 	OnWallrunEnded.Broadcast();
-
-	
-	print(FString("StopWallrun"));
 }
 
 void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 iterations)
@@ -516,6 +556,7 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 			// Acceleration = FallAcceleration for CalcVelocity(), but we restore it after using it.
 			TGuardValue<FVector> RestoreAcceleration(Acceleration, FallAcceleration);
 			Acceleration = FVector::VectorPlaneProject(Acceleration, WallrunningHit.ImpactNormal);
+			
 			//Velocity.Z = 0.f;
 			CalcVelocity(DeltaTime, WallrunLateralFriction, false, MaxDecel);
 			//Velocity.Z = OldVelocity.Z;
@@ -533,21 +574,14 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 	}
 
 
-	
-	// 2. Applying Grip force or "attraction" towards wall.... Booba
-	// const FVector crossVector = WallRunSide == EWallRunSide::LEFT ? FVector(0.0f, 0.0f, -1.0f) : FVector(0.0f, 0.0f, 1.0f);
-	// FVector traceStart = GetPawnOwner()->GetActorLocation() + WallrunTraceOffset + (WallrunningDir * 20.0f);
-	// FVector traceEnd = traceStart + (FVector::CrossProduct(WallrunningDir, crossVector) * MaxWallrunDistance);
-
-	DrawDebugLine(GetWorld(), WallrunningHit.ImpactPoint , WallrunningHit.ImpactPoint+ WallrunningHit.ImpactNormal * 160.f, FColor::Emerald, false, -1, 0, 3);
+    // Calc grip force
+	//DrawDebugLine(GetWorld(), WallrunningHit.ImpactPoint , WallrunningHit.ImpactPoint+ WallrunningHit.ImpactNormal * 160.f, FColor::Emerald, false, -1, 0, 3);
 
 	
 	const float Dist = FMath::Max((WallrunningHit.ImpactPoint - WallrunningImpactPoint).Size() - 40.f, 0.f);
 
-	DrawDebugSphere(GetWorld(), WallrunningImpactPoint, 10.f, 10, FColor::Cyan);
-	DrawDebugSphere(GetWorld(), WallrunningHit.ImpactPoint, 14.f, 10, FColor::Red);
-	
-	print(FString("Dist: ") + FString::SanitizeFloat(Dist,2));
+	//DrawDebugSphere(GetWorld(), WallrunningImpactPoint, 10.f, 10, FColor::Cyan);
+	//DrawDebugSphere(GetWorld(), WallrunningHit.ImpactPoint, 14.f, 10, FColor::Red);
 
 	if(Dist > 0.f)
 	{
@@ -560,20 +594,8 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 		Velocity += Grip;
 	}
 
-	//AddForce(MaxWallrunWalkSpeed * GetInputVector().ProjectOnTo(WallrunningDir));
-	 // // FVector DeltaMov = Velocity;
-	 // FVector VelocityXY = Velocity.ProjectOnTo(WallrunningDir);
-	 // Velocity = FVector(VelocityXY.X, VelocityXY.Y, Velocity.Z);
-	
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + Velocity * 1.f, FColor::Purple, false, .2f, 0, 1);
-	
+	//DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + Velocity * 1.f, FColor::Purple, false, .2f, 0, 1);
 
-	//Super::PhysFalling(DeltaTime, iterations);
-	
-	// TODO: enable below if  using physcustom and need comp moved
-	// const FVector Adjusted = Velocity * DeltaTime;
-	// FHitResult Hit(1.f);
-	// SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
 	
 	const FVector LocationDelta = Velocity * DeltaTime;
 
@@ -616,29 +638,11 @@ void UFPSMovementComponent::DoGrappleRight(FVector EndLocation)
 void UFPSMovementComponent::StopGrappleLeft()
 {
 	bWantsToGrappleLeft = false;
-
-	// if (PawnOwner->GetLocalRole() == ROLE_Authority)
-	// {
-	// 	print(FString("Server StopGrapple LEFT"));
-	// }
-	// else
-	// {
-	// 	print(FString("Client StopGrapple LEFT"));
-	// }
 }
 
 void UFPSMovementComponent::StopGrappleRight()
 {
 	bWantsToGrappleRight = false;
-
-	// if (PawnOwner->GetLocalRole() == ROLE_Authority)
-	// {
-	// 	print(FString("Server StopGrapple Right"));
-	// }
-	// else
-	// {
-	// 	print(FString("Client StopGrapple Right"));
-	// }
 }
 
 void UFPSMovementComponent::PhysUpdateGrappleMovement(float DeltaTime, int32 iterations)
@@ -686,7 +690,6 @@ void UFPSMovementComponent::PhysUpdateGrappleMovement(float DeltaTime, int32 ite
 		GrapplesToQuery.Push(GrappleRightEndLocation);
 	}
 
-	//print(FString::FromInt(GrapplesToQuery.Num()));
 	// Iterate over active grapples to find effective force to add at end
 	FVector TotalForce = FVector(0.f);
 	for(const FVector End : GrapplesToQuery)
@@ -718,11 +721,6 @@ void UFPSMovementComponent::PhysUpdateGrappleMovement(float DeltaTime, int32 ite
 		TotalForce.Z = 0.f;
 	
 	Velocity += TotalForce;
-
-	// FHitResult Hit(1.f);
-	//
-	// print((Vel*DeltaTime*-1).ToString());
-	// SafeMoveUpdatedComponent(Vel*DeltaTime*-1, UpdatedComponent->GetComponentQuat(), true, Hit);
 }
 
 void UFPSMovementComponent::DoPowerSlide()
@@ -737,6 +735,7 @@ void UFPSMovementComponent::StopPowerSlide()
 	bDoingPowerSlide = false;
 	MaxWalkSpeed = MaxWalkSpeedPreValue;
 	GroundFriction = GroundFrictionPreValue;
+	BrakingDecelerationWalking = BrakingDecelerationPreValue;
 
 	OnPowerSlideEnded.Broadcast();
 }

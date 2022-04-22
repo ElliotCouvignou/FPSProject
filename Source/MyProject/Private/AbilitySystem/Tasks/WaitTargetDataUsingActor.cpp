@@ -25,7 +25,7 @@ UWaitTargetDataUsingActor* UWaitTargetDataUsingActor::WaitTargetDataWithReusable
 
 void UWaitTargetDataUsingActor::Activate()
 { 
-	if (IsPendingKill())
+	if (!IsValid(this))
 	{
 		return;
 	}
@@ -209,7 +209,7 @@ void UWaitTargetDataUsingActor::FinalizeTargetActor() const
 
 void UWaitTargetDataUsingActor::RegisterTargetDataCallbacks()
 {
-	if (!ensure(IsPendingKill() == false))
+	if (!ensure(IsValid(this) == true))
 	{
 		return;
 	}

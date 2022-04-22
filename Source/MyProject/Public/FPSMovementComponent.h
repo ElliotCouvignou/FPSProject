@@ -24,6 +24,24 @@ enum class EWallRunSide : uint8
 	RIGHT	UMETA(DisplayName = "Right", ToolTip = "Right shoulder facing wall"),
 };
 
+USTRUCT(BlueprintType)
+struct FLyraCharacterGroundInfo
+{
+	GENERATED_BODY()
+
+	FLyraCharacterGroundInfo()
+		: LastUpdateFrame(0)
+		, GroundDistance(0.0f)
+	{}
+
+	uint64 LastUpdateFrame;
+
+	UPROPERTY(BlueprintReadOnly)
+	FHitResult GroundHitResult;
+
+	UPROPERTY(BlueprintReadOnly)
+	float GroundDistance;
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementPowerSlide);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementWallrun);
@@ -70,6 +88,10 @@ public:
 	FMovementWallrun OnWallrunStarted;
 
 	FVector GetCharacterMovementInputVector();
+
+	UFUNCTION(BlueprintCallable, Category = "Lyra|CharacterMovement")
+	const FLyraCharacterGroundInfo& GetGroundInfo();
+
 
 	bool IsCustomMovementMode(uint8 custom_movement_mode) const;
 
@@ -266,7 +288,8 @@ private:
 	/// @brief Powerslide variable sluff
 	float GroundFrictionPreValue;
 	float MaxWalkSpeedPreValue;
-
+	float BrakingDecelerationPreValue;
+	
 	// 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "PowerSlide")
 	float SpeedToStopSlide = 0.8f;
@@ -283,7 +306,10 @@ private:
 
 	bool bDoingPowerSlide;
 #pragma endregion
+
+protected:
 	
+	FLyraCharacterGroundInfo CachedGroundInfo;
 };
 
 class FSavedMove_MyMovement : public FSavedMove_Character

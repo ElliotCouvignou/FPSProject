@@ -36,11 +36,11 @@ AMyProjectGameMode::AMyProjectGameMode()
 {
 	// set default pawn class to our Blueprinted character
 
-	static ConstructorHelpers::FClassFinder<AMyProjectCharacter> PlayerPawnBPClass(TEXT("/Game/Characters/BP_ShooterChar.BP_ShooterChar_C"));
-	if (PlayerPawnBPClass.Class != NULL)
-	{
-		PlayerClass = PlayerPawnBPClass.Class;
-	}
+	// static ConstructorHelpers::FClassFinder<AMyProjectCharacter> PlayerPawnBPClass(TEXT("/Game/Characters/BP_ShooterChar.BP_ShooterChar_C"));
+	// if (PlayerPawnBPClass.Class != NULL)
+	// {
+	// 	PlayerClass = PlayerPawnBPClass.Class;
+	// }
 
 
 }

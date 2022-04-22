@@ -10,7 +10,13 @@
 #include "Engine/GameInstance.h"
 
 #include "SettingsSave.h"
+#include "UI/MainMenuWidget.h"
+
 #include "MyGameInstance.generated.h"
+
+
+
+
 
 /**
  * 
@@ -35,6 +41,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SaveSettingsData();
 
+	UFUNCTION(BlueprintCallable)
+	void SetMainMenuWidget(UMainMenuWidget* NewMainMenuWidget) { MainMenuWidget = NewMainMenuWidget; }
+
 protected:
 
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
@@ -44,15 +53,19 @@ protected:
 	virtual void Init() override;
 
 	virtual void OnCreateSessionComplete(FName SessionName, bool Succeeded);
+	virtual void OnDestroySessionComplete(FName SessionName, bool Success);
 	virtual void OnFindSessionComplete(bool Succeeded);
 	virtual void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
-
+	
 	UFUNCTION(BlueprintCallable)
 	void CreateServer();
 
 	UFUNCTION(BlueprintCallable)
 	void JoinServer();
+
+	UPROPERTY()
+	UMainMenuWidget* MainMenuWidget;
 	
 	UPROPERTY()
-	FString SettingsSaveSlot = "SettingsSlaveSlot";
+	FString SettingsSaveSlot = "PlayerSettings";
 };

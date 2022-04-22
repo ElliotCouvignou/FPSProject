@@ -734,7 +734,7 @@ void AMyProjectCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	NewController->SetOwner(this);
+	//NewController->SetOwner(this);
 	
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 

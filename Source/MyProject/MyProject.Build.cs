@@ -17,15 +17,17 @@ public class MyProject : ModuleRules
 			"GameplayTasks",
 			"GameplayCameras",
 			"RenderCore",
-			"OnlineSubsystem", "OnlineSubsystemSteam"
+			"OnlineSubsystem"
 		});
+		
+		DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");
 		
 		PrivateDependencyModuleNames.AddRange(new string[] {
 				"CableComponent",
 				"GameplayAbilities",
 				"GameplayTags",
 				"GameplayTasks",
-				"OnlineSubsystem", "OnlineSubsystemSteam", "OnlineSubsystemNull"
+				"OnlineSubsystem", "OnlineSubsystemNull"
 			}
 		);
 	}

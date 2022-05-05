@@ -43,9 +43,7 @@ struct FLyraCharacterGroundInfo
 	float GroundDistance;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementPowerSlide);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementWallrun);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMovementStateUpdate, const bool, IsInState);
 
 /**
  * https://nerivec.github.io/old-ue4-wiki/pages/authoritative-networked-character-movement.html#Boost_Dodge
@@ -79,13 +77,10 @@ public:
 	void Server_SetGrappleRightEndLocation(const FVector& NewValue);
 
 	UPROPERTY(BlueprintAssignable)
-	FMovementPowerSlide OnPowerSlideEnded;
+	FMovementStateUpdate OnPowerSlideStateChanged;
 	UPROPERTY(BlueprintAssignable)
-	FMovementPowerSlide OnPowerSlideStarted;
-	UPROPERTY(BlueprintAssignable)
-	FMovementWallrun OnWallrunEnded;
-	UPROPERTY(BlueprintAssignable)
-	FMovementWallrun OnWallrunStarted;
+	FMovementStateUpdate OnWallrunStateChanged;
+
 
 	FVector GetCharacterMovementInputVector();
 
@@ -143,8 +138,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Client", BlueprintPure)
 	const FVector& GetWallrunningSurfaceNormal() const { return WallrunningHit.ImpactNormal;}
 	
+	UFUNCTION(BlueprintCallable, Category = "Client", BlueprintPure)
+	const FVector& GetWallrunningImpactPoint() const { return WallrunningHit.ImpactPoint;}
+
+	UFUNCTION(BlueprintCallable, Category = "Client", BlueprintPure)
+	const FVector& GetWallrunningDirection() const { return WallrunningDir;}
+	
+	UFUNCTION(BlueprintCallable, Category = "Client", BlueprintPure)
+	const FHitResult& GetWallrunningHitResult() const { return WallrunningHit;}
+
+	UFUNCTION(BlueprintCallable, Category = "Client", BlueprintPure)
+	const EWallRunSide& GetWallrunningSide() const { return WallRunSide;}
+	
 	UFUNCTION()
 	void PhysUpdateWallrunMovement(float DeltaTime, int32 iterations);
+
+	UFUNCTION()
+	virtual void OnRep_DoingWallrun();
 	
 #pragma endregion
 #pragma region Grapple Functions
@@ -172,6 +182,9 @@ void DoPowerSlide();
 	UFUNCTION()
 	void PhysUpdatePowerSlide(float deltaTime, int32 Iterations);
 	// Pullstrength += SPringFactor/(offsetdist)
+
+	UFUNCTION()
+	virtual void OnRep_ShowPowerSlide();
 	
 #pragma endregion
 	
@@ -202,6 +215,12 @@ private:
 	FVector GrappleRightEndLocation;
 
 #pragma region Wallrun
+public:
+	
+	UPROPERTY(BlueprintReadOnly, replicatedUsing=OnRep_DoingWallrun, Category=Character)
+	bool bDoingWallrun;
+	
+protected:
 	
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Wallrun")
 	float WallrunGravityCoeff = 0.8f;
@@ -244,13 +263,13 @@ private:
 	FHitResult WallrunningHit;
 	FVector WallrunningDir;
 	FVector WallrunningImpactPoint;  //Point of closest contact in world space
-	EWallRunSide WallRunSide;	
+	EWallRunSide WallRunSide;
 
 	// if bDoingWallrun then this holds actor referenced as "wall" we are running on
 	UPROPERTY()
 	UPrimitiveComponent* WallrunningComponent = nullptr;
 
-	bool bDoingWallrun;
+
 	
 #pragma endregion
 
@@ -284,6 +303,13 @@ private:
 #pragma endregion
 
 #pragma region PowerSlide
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, replicatedUsing=OnRep_ShowPowerSlide, Category=Character)
+	bool bShowPowerslide;
+
+protected:
 	
 	/// @brief Powerslide variable sluff
 	float GroundFrictionPreValue;
@@ -305,6 +331,7 @@ private:
 	float SpeedBoostAmount = 8000.f;
 
 	bool bDoingPowerSlide;
+
 #pragma endregion
 
 protected:

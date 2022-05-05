@@ -3,6 +3,7 @@
 
 #include "FPSMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Net/UnrealNetwork.h"
 
 #include "GameFramework/Character.h"
 
@@ -20,7 +21,7 @@ namespace LyraCharacter
 class FNetworkPredictionData_Client* UFPSMovementComponent::GetPredictionData_Client() const
 {
 	check(PawnOwner != NULL);
-	check(PawnOwner->GetLocalRole() < ROLE_Authority);
+	//check(PawnOwner->GetLocalRole() < ROLE_Authority);
 
 	if (!ClientPredictionData)
 	{
@@ -44,6 +45,14 @@ UFPSMovementComponent::UFPSMovementComponent(const FObjectInitializer& ObjectIni
 //============================================================================================
 //Replication
 //============================================================================================
+
+void UFPSMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UFPSMovementComponent, bDoingWallrun);
+	DOREPLIFETIME_CONDITION(UFPSMovementComponent, bShowPowerslide, COND_SkipOwner);
+}
 
 bool UFPSMovementComponent::ServerSetMoveDirection_Validate(const FVector& MoveDir)
 {
@@ -522,7 +531,7 @@ void UFPSMovementComponent::BeginWallRun()
 
 	
 	
-		OnWallrunStarted.Broadcast();
+		OnWallrunStateChanged.Broadcast(true);
 	}
 }
 
@@ -533,7 +542,7 @@ void UFPSMovementComponent::StopWallRun()
 	bDoingWallrun = false;
 	bWantsToWallRun = false;
 	
-	OnWallrunEnded.Broadcast();
+	OnWallrunStateChanged.Broadcast(false);
 }
 
 void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 iterations)
@@ -566,11 +575,11 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 	
 	// apply gravity
 	FVector Gravity{0.f, 0.f, GetGravityZ()};
-	Velocity = NewFallVelocity(Velocity, Gravity * WallrunGravityCoeff, DeltaTime);
+	Velocity = NewFallVelocity(Velocity, Gravity * (bWantsToPowerSlide ? 1.f : WallrunGravityCoeff), DeltaTime);
 		
-	if(Velocity.Z < -35.f)
+	if(Velocity.Z < -30.f && !bWantsToPowerSlide)
 	{
-		Velocity.Z += Velocity.Z*-1.8f * DeltaTime;
+		Velocity.Z += Velocity.Z*-2.2f * DeltaTime;
 	}
 
 
@@ -619,6 +628,12 @@ void UFPSMovementComponent::PhysUpdateWallrunMovement(float DeltaTime, int32 ite
 	{
 		
 	}
+}
+
+void UFPSMovementComponent::OnRep_DoingWallrun()
+{
+	OnWallrunStateChanged.Broadcast(bDoingWallrun);
+	bNetworkUpdateReceived = true;
 }
 
 void UFPSMovementComponent::DoGrappleLeft(FVector EndLocation)
@@ -697,7 +712,7 @@ void UFPSMovementComponent::PhysUpdateGrappleMovement(float DeltaTime, int32 ite
 		const FVector Dist = (End - GetOwner()->GetActorLocation()/*ODMComponent->GetSocketLocation(FName("GrappleSocket"))*/);
 	
 		FVector Vel = Velocity;
-		SpeedInPullDirection = FMath::Clamp(Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal()), 0.f, 99999999.f);
+		SpeedInPullDirection = Vel.Size() * FVector::DotProduct(Dist.GetSafeNormal(), Vel.GetSafeNormal());
 		
 		FVector Force = Dist.GetSafeNormal() * (DeltaTime * PullStrengthSpeedDirection->GetFloatValue(SpeedInPullDirection));
 		Force += InputVector.ProjectOnTo(Force) * Force.Size() * PlayerPullInfluence;
@@ -726,18 +741,19 @@ void UFPSMovementComponent::PhysUpdateGrappleMovement(float DeltaTime, int32 ite
 void UFPSMovementComponent::DoPowerSlide()
 {
 	bWantsToPowerSlide = true;
-
-	OnPowerSlideStarted.Broadcast();
+	bShowPowerslide = true;
+	OnPowerSlideStateChanged.Broadcast(true);
 }
 
 void UFPSMovementComponent::StopPowerSlide()
 {
 	bDoingPowerSlide = false;
+	bShowPowerslide = false;
 	MaxWalkSpeed = MaxWalkSpeedPreValue;
 	GroundFriction = GroundFrictionPreValue;
 	BrakingDecelerationWalking = BrakingDecelerationPreValue;
 
-	OnPowerSlideEnded.Broadcast();
+	OnPowerSlideStateChanged.Broadcast(false);
 }
 
 void UFPSMovementComponent::InitiatePowerSlide(float DeltaTime)
@@ -766,6 +782,12 @@ void UFPSMovementComponent::PhysUpdatePowerSlide(float deltaTime, int32 Iteratio
 	{
 		StopPowerSlide();
 	}
+}
+
+void UFPSMovementComponent::OnRep_ShowPowerSlide()
+{
+	OnPowerSlideStateChanged.Broadcast(bShowPowerslide);
+	bNetworkUpdateReceived = true;
 }
 
 void UFPSMovementComponent::AdjustVelocityFromHit(const FHitResult& Hit)

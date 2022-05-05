@@ -236,6 +236,14 @@ protected:
 	// These effects are only applied one time on startup
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|Abilities")
 	TArray<TSubclassOf<class UGameplayEffect>> StartupEffects;
+
+	// GE to assign when their movecomp delegate triggers true (removed on false)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|Abilities")
+	TSubclassOf<class UGameplayEffect> WallrunningGameplayEffect;
+
+	// GE to assign when their movecomp delegate triggers true (removed on false)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Essential|Abilities")
+	TSubclassOf<class UGameplayEffect> PowerslideGameplayEffect;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Essential|FOV")
 	float Default1PFOV = 90.f;
@@ -341,6 +349,15 @@ protected:
 
 	UFUNCTION()
 	void OnRep_CurrentWeapon(AFPSWeapon* LastWeapon);
+
+	UFUNCTION()
+	virtual void PowerSlideChanged(const bool IsInState);
+	UFUNCTION()
+	virtual void WallrunChanged(const bool IsInState);
+
+	FActiveGameplayEffectHandle PowerslideGE;
+	FActiveGameplayEffectHandle WallrunGE;
+
 	
 
 public:

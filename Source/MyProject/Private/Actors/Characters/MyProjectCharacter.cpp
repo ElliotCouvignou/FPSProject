@@ -713,6 +713,38 @@ void AMyProjectCharacter::OnRep_CurrentWeapon(AFPSWeapon* LastWeapon)
 	SetCurrentWeapon(CurrentWeapon, LastWeapon);
 }
 
+void AMyProjectCharacter::PowerSlideChanged(const bool IsInState)
+{
+	if(IsInState)
+	{
+		FGameplayEffectContextHandle EffectContext =  AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+		
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(PowerslideGameplayEffect, 1, EffectContext);
+		PowerslideGE = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());		
+	}
+	else
+	{
+		AbilitySystemComponent->RemoveActiveGameplayEffect(PowerslideGE);
+	}
+}
+
+void AMyProjectCharacter::WallrunChanged(const bool IsInState)
+{
+	if(IsInState)
+	{
+		FGameplayEffectContextHandle EffectContext =  AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+		
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(WallrunningGameplayEffect, 1, EffectContext);
+		WallrunGE = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+	}
+	else
+	{
+		AbilitySystemComponent->RemoveActiveGameplayEffect(WallrunGE);
+	}
+}
+
 
 void AMyProjectCharacter::OnRep_Controller()
 {

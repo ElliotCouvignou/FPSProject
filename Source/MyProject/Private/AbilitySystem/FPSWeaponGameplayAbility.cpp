@@ -211,6 +211,34 @@ void UFPSWeaponGameplayAbility::SetCurrentMontageForMesh(USkeletalMeshComponent*
 	}
 }
 
+void UFPSWeaponGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	// Force toggle input behavior flags to true (first input pressed)
+	UFPSAbilitySystemComponent* OwningASC = UFPSAbilitySystemComponent::GetAbilitySystemComponentFromActor(GetOwningActorFromActorInfo());
+	if(OwningASC && ActorInfo->IsLocallyControlled())
+	{
+		OwningASC->SetToggleInputIdFlag(OwningASC->FindAbilitySpecFromHandle(Handle)->InputID, false);
+	}
+	
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+}
+
+void UFPSWeaponGameplayAbility::CancelAbility(const FGameplayAbilitySpecHandle Handle,
+                                              const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                              bool bReplicateCancelAbility)
+{
+	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+
+	// reset toggle input behavior flags
+	// UFPSAbilitySystemComponent* OwningASC = UFPSAbilitySystemComponent::GetAbilitySystemComponentFromActor(GetOwningActorFromActorInfo());
+	// if(OwningASC && ActorInfo->IsLocallyControlled())
+	// {
+	// 	OwningASC->SetToggleInputIdFlag(OwningASC->FindAbilitySpecFromHandle(Handle)->InputID, false);
+	// }
+}
+
 bool UFPSWeaponGameplayAbility::FindAbillityMeshMontage(USkeletalMeshComponent* InMesh, FAbilityMeshMontage& InAbilityMeshMontage)
 {
 	for (FAbilityMeshMontage& MeshMontage : CurrentAbilityMeshMontages)

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "MyProject.h"
 #include "FPSAbilitySystemComponent.generated.h"
 
 
@@ -126,6 +127,18 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Abilities")
 	FGameplayAbilitySpecHandle FindAbilitySpecHandleForClass(TSubclassOf<UGameplayAbility> AbilityClass, UObject* OptionalSourceObject=nullptr);
 
+	UFUNCTION(BlueprintCallable, Category = "UserSettings")
+	void AddToggleInputId(EAbilityInputID InputID);
+
+	UFUNCTION(BlueprintCallable, Category = "UserSettings")
+	void RemoveToggleInputId(EAbilityInputID InputID);
+
+	UFUNCTION(BlueprintCallable, Category = "UserSettings")
+	void SetToggleInputIdFlag(int32 InputID, bool NewValue);
+
+	virtual void AbilityLocalInputPressed(int32 InputID) override;
+	
+	virtual void AbilityLocalInputReleased(int32 InputID) override;
 
 protected:
 	UPROPERTY()
@@ -151,4 +164,10 @@ protected:
 	// Returns true if we are ready to handle replicated montage information
 	virtual bool IsReadyForReplicatedMontageForMesh();
 
+
+	/* Id's to mark with toggled behavior e.g ADS, grapple */
+	UPROPERTY()
+	TMap<int32,bool> ToggledInputIDs;
+
+	
 };

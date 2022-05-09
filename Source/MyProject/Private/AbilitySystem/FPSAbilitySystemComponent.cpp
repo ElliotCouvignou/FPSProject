@@ -7,6 +7,8 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "Net/UnrealNetwork.h"
 
+#define print(text) if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 60, FColor::Green,text)
+
 
 static TAutoConsoleVariable<float> CVarReplayMontageErrorThreshold(
 	TEXT("GS.replay.MontageErrorThreshold"),
@@ -259,6 +261,58 @@ FGameplayAbilitySpecHandle UFPSAbilitySystemComponent::FindAbilitySpecHandleForC
 	}
 
 	return FGameplayAbilitySpecHandle();
+}
+
+void UFPSAbilitySystemComponent::AddToggleInputId(EAbilityInputID InputID)
+{
+	ToggledInputIDs.Add(TPair<int32,bool>(static_cast<int32>(InputID), false));
+}
+
+void UFPSAbilitySystemComponent::RemoveToggleInputId(EAbilityInputID InputID)
+{
+	ToggledInputIDs.Remove(static_cast<int32>(InputID));
+}
+
+void UFPSAbilitySystemComponent::SetToggleInputIdFlag(int32 InputID, bool NewValue)
+{
+	bool* flag = ToggledInputIDs.Find(InputID);
+	if(flag)
+	{
+		*flag = NewValue;
+	}
+}
+
+void UFPSAbilitySystemComponent::AbilityLocalInputPressed(int32 InputID)
+{
+	Super::AbilityLocalInputPressed(InputID);
+
+	// if Using toggle behavior and current waiting for next press, jump into release
+	bool* bIsToggled = ToggledInputIDs.Find(InputID);
+	if(bIsToggled)
+	{
+		// inverse input for all cases, from here on remember bool is opposite of what is originally sent
+		SetToggleInputIdFlag(InputID, !*bIsToggled);
+		if(!*bIsToggled)
+		{
+			AbilityLocalInputReleased(InputID);
+		}
+	}
+}
+
+void UFPSAbilitySystemComponent::AbilityLocalInputReleased(int32 InputID)
+{
+	// Query user setting for toggled inputs, if input is in list of toggled then we find elem and return
+	// if flag is false, we also set flag to true
+	bool* bIsToggled = ToggledInputIDs.Find(InputID);
+	if(bIsToggled)
+	{
+		if(*bIsToggled)
+		{
+			return;
+		}
+	}
+	
+	Super::AbilityLocalInputReleased(InputID);
 }
 
 FGameplayAbilityLocalAnimMontageForMesh& UFPSAbilitySystemComponent::GetLocalAnimMontageInfoForMesh(

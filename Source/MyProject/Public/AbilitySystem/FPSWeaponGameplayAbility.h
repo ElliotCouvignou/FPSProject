@@ -177,6 +177,14 @@ public:
 	
 	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	//void GetAimDirection(FRotator& Result);
+
+	/** Actually activate ability, do not call this directly */
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
+	/** Destroys instanced-per-execution abilities. Instance-per-actor abilities should 'reset'. Any active ability state tasks receive the 'OnAbilityStateInterrupted' event. Non instance abilities - what can we do? */
+	virtual void CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
+
+	
 protected:
 	UPROPERTY()
 	TArray<FAbilityMeshMontage> CurrentAbilityMeshMontages;

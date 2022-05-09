@@ -17,6 +17,8 @@ class MYPROJECT_API USettingsSave : public USaveGame
 
 public:
 
+#pragma region Gameplay
+		
 	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
 	float FOV = 90.f;
 
@@ -28,11 +30,20 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
 	float SniperWeaponFOVMultiplier = 1.f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	bool bToggleGrapple = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Gameplay")
+	bool bToggleADS = false;
 	
+#pragma endregion
+#pragma region Controls
 	UPROPERTY(BlueprintReadWrite, Category = "Controls")
 	float MouseSensitivity = 1.0f;
-	
 
+#pragma endregion
+#pragma region Audio
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
 	float Master = 0.5f;
@@ -45,5 +56,5 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Audio")
 	float Ambient = 0.5f;
-	
+#pragma endregion	
 };
